@@ -47,6 +47,10 @@
   --btn: #121826;
   --btn-edge: #263044;
   --radius: 3px;
+  --glass: rgba(12,18,30,.34);
+  --glass-btn: rgba(255,255,255,.06);
+  --glass-edge: rgba(170,210,255,.16);
+  --glass-radius: 16px;
   --font-display: "Chakra Petch", "Segoe UI", system-ui, sans-serif;
   --font-data: "IBM Plex Mono", ui-monospace, "SF Mono", Menlo, monospace;
   color-scheme: dark;
@@ -68,16 +72,20 @@ body {
   display: flex; justify-content: space-between; gap: 12px; align-items: center;
   font-size: 11px; letter-spacing: .14em; text-transform: uppercase; color: var(--dim);
 }
-.topline b { font-family: var(--font-display); font-weight: 600; color: var(--ink); letter-spacing: .2em; font-size: 12px; white-space: nowrap; }
+.topline b { font-family: var(--font-display); font-weight: 600; color: var(--ink); opacity: .85; letter-spacing: .2em; font-size: 12px; white-space: nowrap; }
 .topline .right { display: flex; align-items: center; gap: 14px; min-width: 0; }
-.topline .hint { text-align: right; }
+.topline .hint { text-align: right; white-space: nowrap; }
+@media (max-width: 1320px) { .topline .hint { display: none; } }
+@media (max-width: 980px) { .topline .dest { display: none; } }
 
 .theme-btn, .presets button, .sound {
   pointer-events: auto;
   font: 500 11px/1 var(--font-data); letter-spacing: .1em; text-transform: uppercase;
-  color: var(--ink); background: var(--btn); border: 1px solid var(--btn-edge); border-radius: var(--radius);
+  color: var(--ink); background: var(--glass-btn); border: 1px solid var(--glass-edge); border-radius: var(--radius);
   padding: 8px 11px; cursor: pointer; white-space: nowrap;
+  transition: color .2s ease, border-color .2s ease, background .2s ease;
 }
+.theme-btn { background: var(--glass); -webkit-backdrop-filter: blur(14px) saturate(150%); backdrop-filter: blur(14px) saturate(150%); }
 .theme-btn { display: inline-flex; align-items: center; gap: 8px; }
 .theme-btn .dot { width: 12px; height: 12px; border-radius: 50%; background: var(--swatch, linear-gradient(135deg, var(--signal), var(--heat))); box-shadow: 0 0 0 1px var(--btn-edge); }
 .theme-btn:hover, .presets button:hover, .sound:hover { border-color: var(--signal); color: var(--signal); }
@@ -88,15 +96,16 @@ body {
   top: calc(env(safe-area-inset-top, 0px) + 46px);
   right: max(16px, env(safe-area-inset-right, 0px));
   width: min(360px, calc(100vw - 32px));
-  background: var(--hull); border: 1px solid var(--btn-edge); border-radius: calc(var(--radius) * 2);
-  box-shadow: 0 20px 50px rgba(0,0,0,.6); padding: 14px;
+  background: var(--glass); border: 1px solid var(--glass-edge); border-radius: var(--glass-radius);
+  -webkit-backdrop-filter: blur(22px) saturate(160%); backdrop-filter: blur(22px) saturate(160%);
+  box-shadow: 0 20px 50px rgba(0,0,0,.35), inset 0 1px 0 rgba(255,255,255,.08); padding: 14px;
   display: grid; gap: 10px;
 }
 .theme-panel .label { margin-bottom: 2px; }
 .theme-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
 .theme-card {
   display: grid; gap: 8px; padding: 8px; text-align: left; cursor: pointer;
-  background: var(--btn); border: 1px solid var(--btn-edge); border-radius: var(--radius); color: var(--ink);
+  background: var(--glass-btn); border: 1px solid var(--glass-edge); border-radius: var(--radius); color: var(--ink);
   font: 500 12px/1.2 var(--font-data);
 }
 .theme-card:hover { border-color: var(--signal); }
@@ -111,22 +120,35 @@ body {
 .sw-toon { background: radial-gradient(circle at 66% 50%, #ff8a5c 0 13px, #0b0820 14px 16px, transparent 17px), radial-gradient(circle at 26% 40%, #fff7c2 0 3px, transparent 4px), radial-gradient(circle at 40% 75%, #9ff3ff 0 2px, transparent 3px), #1d1a52; }
 
 .dash {
-  position: fixed; left: 0; right: 0; bottom: 0; z-index: 2;
-  padding-top: 14px;
+  position: fixed; left: 0; right: 0; bottom: 0; z-index: 2; pointer-events: none;
   padding-bottom: calc(env(safe-area-inset-bottom, 0px) + 14px);
   padding-left: max(16px, env(safe-area-inset-left, 0px));
   padding-right: max(16px, env(safe-area-inset-right, 0px));
-  background: linear-gradient(180deg, var(--hull-top) 0%, var(--hull) 40%);
-  border-top: 1px solid var(--hull-edge);
-  box-shadow: 0 -18px 40px rgba(0,0,0,.55);
 }
 .console {
-  max-width: 1180px; margin: 0 auto;
-  display: grid; grid-template-columns: minmax(0,1.1fr) minmax(0,2fr) minmax(0,1.1fr); gap: 28px; align-items: center;
+  pointer-events: auto;
+  max-width: 1000px; margin: 0 auto; padding: 14px 20px;
+  display: grid; grid-template-columns: minmax(0,1fr) minmax(0,1.9fr) minmax(0,1fr); gap: 24px; align-items: center;
+  background: var(--glass); border: 1px solid var(--glass-edge); border-radius: var(--glass-radius);
+  -webkit-backdrop-filter: blur(18px) saturate(150%); backdrop-filter: blur(18px) saturate(150%);
+  box-shadow: 0 12px 40px rgba(0,0,0,.28), inset 0 1px 0 rgba(255,255,255,.07);
+ transition: background .6s ease, border-color .6s ease;
+}
+.console > * { transition: opacity .6s ease; }
+/* settings step back while you fly (the glass stays, the readouts dim); they come forward on hover, touch or focus */
+body.idle .console { background: transparent; border-color: transparent; box-shadow: none; }
+body.idle .console > * { opacity: .32; }
+body.idle .console:hover, body.idle .console:focus-within { background: var(--glass); border-color: var(--glass-edge); }
+.console:hover > *, .console:focus-within > * { opacity: 1 !important; }
+.topline .right, .topline > span:first-child { transition: opacity .6s ease; }
+body.idle .topline .right, body.idle .topline > span:first-child { opacity: .35; }
+.topline .right:hover, .topline .right:focus-within { opacity: 1 !important; }
+@supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+  .console, .theme-panel, .theme-btn, .tool, .toast { background: var(--hull); }
 }
 .label { font-size: 10.5px; letter-spacing: .16em; text-transform: uppercase; color: var(--dim); }
 .velocity .num {
-  font-family: var(--font-display); font-weight: 600; font-size: clamp(30px, 4.4vw, 46px); line-height: 1.05;
+  font-family: var(--font-display); font-weight: 600; font-size: clamp(26px, 3.4vw, 38px); line-height: 1.05;
   font-variant-numeric: tabular-nums; color: var(--ink);
 }
 .velocity .num small { font-size: .45em; color: var(--signal); margin-left: 4px; letter-spacing: .05em; }
@@ -164,14 +186,15 @@ input[type=range]:focus-visible { outline: 2px solid var(--signal); outline-offs
 
 .nav { display: grid; gap: 10px; }
 .nav .row { display: flex; justify-content: space-between; gap: 12px; align-items: baseline; }
-.nav .val { font-size: 14px; font-variant-numeric: tabular-nums; color: var(--ink); text-align: right; }
+.nav .val { font-size: 14px; font-variant-numeric: tabular-nums; color: var(--ink); text-align: right; white-space: nowrap; }
 .sound { justify-self: start; }
 .sound[aria-pressed="true"] { color: var(--signal); border-color: var(--signal); }
 
 .tools { display: flex; gap: 6px; pointer-events: auto; }
 .tool {
   width: 32px; height: 32px; display: grid; place-items: center; padding: 0; cursor: pointer;
-  color: var(--ink); background: var(--btn); border: 1px solid var(--btn-edge); border-radius: var(--radius);
+  color: var(--ink); background: var(--glass); border: 1px solid var(--glass-edge); border-radius: var(--radius);
+  -webkit-backdrop-filter: blur(14px) saturate(150%); backdrop-filter: blur(14px) saturate(150%);
 }
 .tool svg { width: 16px; height: 16px; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
 .tool:hover, .tool[aria-pressed="true"] { color: var(--signal); border-color: var(--signal); }
@@ -188,7 +211,8 @@ body.idle #space { cursor: none; }
 .toast {
   position: fixed; left: 50%; z-index: 5; transform: translateX(-50%);
   top: calc(env(safe-area-inset-top, 0px) + 56px);
-  background: var(--hull); color: var(--ink); border: 1px solid var(--signal); border-radius: var(--radius);
+  background: var(--glass); color: var(--ink); border: 1px solid var(--glass-edge); border-radius: var(--glass-radius);
+  -webkit-backdrop-filter: blur(18px); backdrop-filter: blur(18px);
   padding: 9px 14px; font-size: 12px; letter-spacing: .04em; max-width: calc(100vw - 32px); text-align: center;
   box-shadow: 0 10px 30px rgba(0,0,0,.5);
 }
@@ -200,12 +224,18 @@ body.idle #space { cursor: none; }
   .tools { gap: 4px; }
   .topline .right { gap: 6px; }
   .theme-btn { padding: 0; width: 32px; height: 32px; justify-content: center; }
-  .console { grid-template-columns: minmax(0,1fr) minmax(0,1fr); gap: 14px 18px; }
+  .console { grid-template-columns: minmax(0,1fr) minmax(0,1fr); gap: 12px 16px; padding: 12px 14px; }
   .throttle { grid-column: 1 / -1; order: 3; }
   .topline .hint { display: none; }
   .topline .dest { display: none; }
+  .nav { gap: 7px; }
   .nav .val { font-size: 12.5px; }
-  .presets button { padding: 7px 9px; }
+  .nav .row.dilation, .ticks, .velocity .sub { display: none; }
+  .mode { margin-top: 4px; }
+  .throttle { gap: 6px; }
+  .presets { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 6px; }
+  .presets button { padding: 8px 2px; font-size: 10px; letter-spacing: .04em; }
+  .sound { padding: 7px 9px; font-size: 10px; }
 }
 </style>
 </head>
@@ -215,13 +245,16 @@ body.idle #space { cursor: none; }
 <div class="topline">
   <span><b>Deep Field Cruiser</b><span class="dest"> &nbsp;· bound for Proxima Centauri</span></span>
   <span class="right">
-    <span class="hint">↑ ↓ or W / S to throttle · Space to stop · T themes · H hide controls</span>
+    <span class="hint">↑ ↓ or W / S to throttle · Space to stop · T themes · C cockpit · H hide controls</span>
     <button type="button" class="theme-btn" id="themeBtn" aria-haspopup="true" aria-expanded="false" aria-controls="themePanel" title="Change theme">
       <span class="dot" aria-hidden="true"></span><span id="themeName">Deep Space</span>
     </button>
     <span class="tools">
       <button type="button" class="tool" id="tiltBtn" aria-pressed="false" aria-label="Steer by tilting your phone" title="Tilt to steer" hidden>
         <svg viewBox="0 0 24 24"><rect x="7" y="2.5" width="10" height="19" rx="2"/><path d="M3 9c-1 2-1 4 0 6M21 9c1 2 1 4 0 6"/></svg>
+      </button>
+      <button type="button" class="tool" id="cockpitBtn" aria-pressed="false" aria-label="Show cockpit frame" title="Cockpit frame (C)">
+        <svg viewBox="0 0 24 24"><path d="M6 4h12l4 7-3 9H5l-3-9z"/></svg>
       </button>
       <button type="button" class="tool" id="shareBtn" aria-label="Share this view" title="Share">
         <svg viewBox="0 0 24 24"><path d="M12 15V3M7 8l5-5 5 5"/><path d="M5 12v7a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-7"/></svg>
@@ -275,8 +308,8 @@ body.idle #space { cursor: none; }
     <div class="nav">
       <div class="row"><span class="label">Travelled</span><span class="val" id="dist">0.00 AU</span></div>
       <div class="row"><span class="label">Proxima ETA</span><span class="val" id="eta">—</span></div>
-      <div class="row"><span class="label" id="gLabel">Time dilation</span><span class="val" id="gamma">γ 1.000</span></div>
-      <button type="button" class="sound" id="sound" aria-pressed="false">Engine sound: off</button>
+      <div class="row dilation"><span class="label" id="gLabel">Time dilation</span><span class="val" id="gamma">γ 1.000</span></div>
+      <button type="button" class="sound" id="sound" aria-pressed="false">Sound: off</button>
     </div>
   </div>
 </div>
@@ -306,7 +339,7 @@ body.idle #space { cursor: none; }
       ],
       warp: ['190,235,255', '110,190,255', '60,90,255'],
       frame: ['#0c1019', '#080b12', '#0b0f17'], frameEdge: '#141a26', edge: '127,227,255', bolt: '#232c3d',
-      css: { '--void': '#020308', '--hull-top': '#0d121c', '--hull': '#0b0f17', '--hull-edge': '#1c2433', '--ink': '#d9e4f3', '--dim': '#7f8ca4', '--signal': '#7fe3ff', '--heat': '#ffb067', '--track': '#1a2130', '--btn': '#121826', '--btn-edge': '#263044', '--radius': '3px', '--font-display': '"Chakra Petch", "Segoe UI", system-ui, sans-serif', '--swatch': 'linear-gradient(135deg, #2a5f86, #6a2a6e)' }
+      css: { '--void': '#020308', '--hull-top': '#0d121c', '--hull': '#0b0f17', '--hull-edge': '#1c2433', '--ink': '#d9e4f3', '--dim': '#7f8ca4', '--signal': '#7fe3ff', '--heat': '#ffb067', '--track': '#1a2130', '--btn': '#121826', '--btn-edge': '#263044', '--radius': '3px', '--font-display': '"Chakra Petch", "Segoe UI", system-ui, sans-serif', '--swatch': 'linear-gradient(135deg, #2a5f86, #6a2a6e)', '--glass': 'rgba(12,18,30,.34)', '--glass-btn': 'rgba(255,255,255,.06)', '--glass-edge': 'rgba(170,210,255,.16)', '--glass-radius': '16px' }
     },
     neon: {
       name: 'Neon Grid', style: 'neon', bg: '#07010f', grid: '255,60,220',
@@ -319,7 +352,7 @@ body.idle #space { cursor: none; }
       ],
       warp: ['255,190,250', '255,60,220', '120,40,255'],
       frame: ['#12041f', '#0a0214', '#12041f'], frameEdge: '#1e0833', edge: '255,60,220', bolt: '#3a1458',
-      css: { '--void': '#07010f', '--hull-top': '#16052a', '--hull': '#0d0219', '--hull-edge': '#3a1458', '--ink': '#fbe9ff', '--dim': '#a07bb8', '--signal': '#ff5ce1', '--heat': '#5cf6ff', '--track': '#22093a', '--btn': '#170629', '--btn-edge': '#45196a', '--radius': '2px', '--font-display': '"Chakra Petch", "Segoe UI", system-ui, sans-serif', '--swatch': 'linear-gradient(#ffe45c, #ff2bd6)' }
+      css: { '--void': '#07010f', '--hull-top': '#16052a', '--hull': '#0d0219', '--hull-edge': '#3a1458', '--ink': '#fbe9ff', '--dim': '#a07bb8', '--signal': '#ff5ce1', '--heat': '#5cf6ff', '--track': '#22093a', '--btn': '#170629', '--btn-edge': '#45196a', '--radius': '2px', '--font-display': '"Chakra Petch", "Segoe UI", system-ui, sans-serif', '--swatch': 'linear-gradient(#ffe45c, #ff2bd6)', '--glass': 'rgba(32,6,52,.32)', '--glass-btn': 'rgba(255,120,240,.08)', '--glass-edge': 'rgba(255,92,225,.30)', '--glass-radius': '10px' }
     },
     mono: {
       name: 'Monochrome', style: 'real', bg: '#000000',
@@ -334,7 +367,7 @@ body.idle #space { cursor: none; }
       ],
       warp: ['255,255,255', '200,200,200', '120,120,120'],
       frame: ['#0b0b0b', '#050505', '#0b0b0b'], frameEdge: '#151515', edge: '255,255,255', bolt: '#2a2a2a',
-      css: { '--void': '#000000', '--hull-top': '#111111', '--hull': '#0a0a0a', '--hull-edge': '#2b2b2b', '--ink': '#f2f2f2', '--dim': '#8c8c8c', '--signal': '#ffffff', '--heat': '#ffffff', '--track': '#1c1c1c', '--btn': '#121212', '--btn-edge': '#333333', '--radius': '0px', '--font-display': '"Chakra Petch", "Segoe UI", system-ui, sans-serif', '--swatch': 'linear-gradient(135deg, #fff 50%, #000 50%)' }
+      css: { '--void': '#000000', '--hull-top': '#111111', '--hull': '#0a0a0a', '--hull-edge': '#2b2b2b', '--ink': '#f2f2f2', '--dim': '#8c8c8c', '--signal': '#ffffff', '--heat': '#ffffff', '--track': '#1c1c1c', '--btn': '#121212', '--btn-edge': '#333333', '--radius': '0px', '--font-display': '"Chakra Petch", "Segoe UI", system-ui, sans-serif', '--swatch': 'linear-gradient(135deg, #fff 50%, #000 50%)', '--glass': 'rgba(0,0,0,.34)', '--glass-btn': 'rgba(255,255,255,.07)', '--glass-edge': 'rgba(255,255,255,.22)', '--glass-radius': '2px' }
     },
     toon: {
       name: 'Cartoon', style: 'toon', bg: '#1d1a52',
@@ -350,7 +383,7 @@ body.idle #space { cursor: none; }
       ],
       warp: ['255,250,210', '255,216,77', '255,107,154'],
       frame: ['#2a2366', '#211b55', '#2a2366'], frameEdge: '#0b0820', edge: '255,216,77', bolt: '#ffd84d',
-      css: { '--void': '#1d1a52', '--hull-top': '#2d2670', '--hull': '#221c5a', '--hull-edge': '#0b0820', '--ink': '#fffaf0', '--dim': '#b6aee8', '--signal': '#ffd84d', '--heat': '#ff6b9a', '--track': '#15113d', '--btn': '#2f2878', '--btn-edge': '#0b0820', '--radius': '10px', '--font-display': '"Fredoka", "Trebuchet MS", system-ui, sans-serif', '--swatch': 'linear-gradient(135deg, #ff8a5c, #5cc8ff)' }
+      css: { '--void': '#1d1a52', '--hull-top': '#2d2670', '--hull': '#221c5a', '--hull-edge': '#0b0820', '--ink': '#fffaf0', '--dim': '#b6aee8', '--signal': '#ffd84d', '--heat': '#ff6b9a', '--track': '#15113d', '--btn': '#2f2878', '--btn-edge': '#0b0820', '--radius': '10px', '--font-display': '"Fredoka", "Trebuchet MS", system-ui, sans-serif', '--swatch': 'linear-gradient(135deg, #ff8a5c, #5cc8ff)', '--glass': 'rgba(40,32,110,.42)', '--glass-btn': 'rgba(255,255,255,.10)', '--glass-edge': 'rgba(255,216,77,.45)', '--glass-radius': '22px' }
     }
   };
   let TH = THEMES.deep, themeId = 'deep';
@@ -364,7 +397,8 @@ body.idle #space { cursor: none; }
   let travelledAU = 0, travel = 0, nextPlanetAt = 9, flash = 0;
   let vpx = 0, vpy = 0, steerX = 0, steerY = 0, aimX = 0, aimY = 0;
   let windowPath = null, frameGrad = null, bandCanvas = null;
-  let zen = false, dashCur = 0, dprCap = 2, starScale = 1;
+  let zen = false, dashCur = 0, dprCap = 2, starScale = 1, cockpit = false;
+  try { cockpit = localStorage.getItem('dfc-cockpit') === '1'; } catch (e) {}
 
   try { const saved = localStorage.getItem('dfc-theme'); if (saved && THEMES[saved]) themeId = saved; } catch (e) {}
   try { const au = parseFloat(localStorage.getItem('dfc-au')); if (au > 0) travelledAU = au; } catch (e) {}
@@ -428,6 +462,7 @@ body.idle #space { cursor: none; }
     if (!N) seedStars();
   }
   function windowBox() {
+    if (!cockpit) return { T: 0, B: H, mid: H * 0.47 };
     const open = dashH ? dashCur / dashH : 1;
     const T = Math.max(H * 0.05, 56 * DPR) * (0.55 + 0.45 * open);
     const B = H - Math.max(dashCur, 10 * DPR) - 6 * DPR;
@@ -514,6 +549,7 @@ body.idle #space { cursor: none; }
     }
     else if (k === 'h') setZen(!zen);
     else if (k === 'f') toggleFullscreen();
+    else if (k === 'c') setCockpit(!cockpit);
     else if (k === ' ' && e.target.tagName !== 'BUTTON') { setTarget(0); e.preventDefault(); }
     wake();
   });
@@ -561,6 +597,15 @@ body.idle #space { cursor: none; }
     wake();
   }
   $('zenBtn').addEventListener('click', () => setZen(!zen));
+  function setCockpit(on) {
+    cockpit = on;
+    try { localStorage.setItem('dfc-cockpit', on ? '1' : '0'); } catch (e) {}
+    $('cockpitBtn').setAttribute('aria-pressed', String(on));
+    $('cockpitBtn').setAttribute('aria-label', on ? 'Hide cockpit frame' : 'Show cockpit frame');
+    if (W) buildFrame();
+  }
+  $('cockpitBtn').addEventListener('click', () => setCockpit(!cockpit));
+  setCockpit(cockpit);
 
   // ---------- fullscreen ----------
   const fsEl = document.documentElement;
@@ -647,7 +692,7 @@ body.idle #space { cursor: none; }
     if (audio.ac.state === 'suspended') await audio.ac.resume();
     audio.gain.gain.setTargetAtTime(audio.on ? 0.06 : 0, audio.ac.currentTime, 0.2);
     btn.setAttribute('aria-pressed', String(audio.on));
-    btn.textContent = 'Engine sound: ' + (audio.on ? 'on' : 'off');
+    btn.textContent = 'Sound: ' + (audio.on ? 'on' : 'off');
   });
 
   // ---------- readouts ----------
@@ -753,7 +798,7 @@ body.idle #space { cursor: none; }
     ctx.fillStyle = vg; ctx.fillRect(0, 0, W, H);
 
     drawReticle(warp);
-    drawCockpit(now, warp);
+    if (cockpit) drawCockpit(now, warp);
 
     // theme-change flash
     if (flash > 0) {

@@ -1,5 +1,5 @@
 // Offline support: serve the game shell from cache, refresh it in the background.
-const CACHE = 'dfc-v1';
+const CACHE = 'dfc-v2';
 const SHELL = ['./', './index.html', './manifest.webmanifest', './favicon.svg', './icon-192.png', './icon-512.png'];
 
 self.addEventListener('install', e => {
