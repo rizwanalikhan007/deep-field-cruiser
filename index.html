@@ -327,8 +327,8 @@ body.idle #space { cursor: none; }
   const THEMES = {
     deep: {
       name: 'Deep Space', style: 'real', bg: '#020308',
-      band: '150,140,170', dust: '210,220,255', dustCount: 2600, dustSize: 0.7,
-      stars: ['#e2ebff', '#ffd6a3', '#a9e7ff'], warpStar: '#bfe2ff', starW: 1, starBlend: 'source-over',
+      band: '150,140,170', dust: '210,220,255', dustCount: 4200, dustSize: 0.7,
+      stars: ['#9db4ff', '#b5c7ff', '#d8e2ff', '#f8f7ff', '#fff2de', '#ffd9ac', '#ffbd7a'], warpStar: '#cfe3ff', starW: 1, starBlend: 'source-over',
       nebs: ['64,170,220', '190,70,170', '110,80,210', '230,130,70', '40,190,170'], nebAlpha: 1,
       planets: [
         { lite: '#ffd2a6', base: '#c4723f', dark: '#2a1009', atmo: '255,160,100', bands: true, ring: true },
@@ -357,7 +357,7 @@ body.idle #space { cursor: none; }
     mono: {
       name: 'Monochrome', style: 'real', bg: '#000000',
       band: '200,200,200', dust: '255,255,255', dustCount: 2800, dustSize: 0.7,
-      stars: ['#ffffff', '#d6d6d6', '#bdbdbd'], warpStar: '#ffffff', starW: 1, starBlend: 'source-over',
+      mono: true, stars: ['#dcdcdc', '#e8e8e8', '#f4f4f4', '#ffffff', '#f7f7f7', '#e2e2e2', '#cfcfcf'], warpStar: '#ffffff', starW: 1, starBlend: 'source-over',
       nebs: ['220,220,220', '150,150,150', '90,90,90'], nebAlpha: 0.7,
       planets: [
         { lite: '#ffffff', base: '#9c9c9c', dark: '#080808', atmo: '235,235,235', bands: true, ring: true },
@@ -410,11 +410,12 @@ body.idle #space { cursor: none; }
   TH = THEMES[themeId];
 
   // ---------- stars ----------
-  let N = 0, sx, sy, sz, sc;
+  let N = 0, sx, sy, sz, sc, sbr;
+  const STAR_CUM = [0.04, 0.12, 0.25, 0.50, 0.75, 0.90, 1];
   const sX1 = [], sY1 = [], sX2 = [], sY2 = [], sB = [];
   function seedStars() {
     N = Math.max(700, Math.min(1900, Math.round((innerWidth * innerHeight) / 850)));
-    sx = new Float32Array(N); sy = new Float32Array(N); sz = new Float32Array(N); sc = new Uint8Array(N);
+    sx = new Float32Array(N); sy = new Float32Array(N); sz = new Float32Array(N); sc = new Uint8Array(N); sbr = new Uint8Array(N);
     for (let i = 0; i < N; i++) resetStar(i, Math.random());
   }
   function resetStar(i, z) {
@@ -422,7 +423,9 @@ body.idle #space { cursor: none; }
     sy[i] = (Math.random() * 2 - 1) * 1.6;
     sz[i] = z;
     const r = Math.random();
-    sc[i] = r < 0.68 ? 0 : r < 0.86 ? 1 : 2;
+    let k = 0; while (r > STAR_CUM[k]) k++;
+    sc[i] = k;
+    sbr[i] = Math.random() < 0.035 ? 1 : 0;
   }
   const BAND_W = [0.6, 1.0, 1.6, 2.5], BAND_A = [0.35, 0.6, 0.85, 1];
 
@@ -449,6 +452,310 @@ body.idle #space { cursor: none; }
     };
   }
   spawnPlanet(3.6);
+  {
+    const fp = parseInt(new URLSearchParams(location.search).get('planet'), 10);
+    if (fp >= 0 && fp < 6) { planet.ki = fp; planet.z = 2.2; planet.x = Math.sign(planet.x) * (planet.r + 0.25); planet.y = 0.05; }
+  }
+
+  // ---------- realistic rendering (WebGL) ----------
+  // Planets, nebulae and the Milky Way are rendered with shaders into an offscreen WebGL canvas,
+  // then composited into the 2D scene. Falls back to the flat 2D drawing if WebGL is missing.
+  const GLSL_NOISE = `
+    vec3 mod289(vec3 x){return x-floor(x*(1.0/289.0))*289.0;}
+    vec4 mod289(vec4 x){return x-floor(x*(1.0/289.0))*289.0;}
+    vec4 permute(vec4 x){return mod289(((x*34.0)+1.0)*x);}
+    vec4 taylorInvSqrt(vec4 r){return 1.79284291400159-0.85373472095314*r;}
+    float snoise(vec3 v){
+      const vec2 C=vec2(1.0/6.0,1.0/3.0); const vec4 D=vec4(0.0,0.5,1.0,2.0);
+      vec3 i=floor(v+dot(v,C.yyy)); vec3 x0=v-i+dot(i,C.xxx);
+      vec3 g=step(x0.yzx,x0.xyz); vec3 l=1.0-g; vec3 i1=min(g.xyz,l.zxy); vec3 i2=max(g.xyz,l.zxy);
+      vec3 x1=x0-i1+C.xxx; vec3 x2=x0-i2+C.yyy; vec3 x3=x0-D.yyy;
+      i=mod289(i);
+      vec4 p=permute(permute(permute(i.z+vec4(0.0,i1.z,i2.z,1.0))+i.y+vec4(0.0,i1.y,i2.y,1.0))+i.x+vec4(0.0,i1.x,i2.x,1.0));
+      float n_=0.142857142857; vec3 ns=n_*D.wyz-D.xzx;
+      vec4 j=p-49.0*floor(p*ns.z*ns.z);
+      vec4 x_=floor(j*ns.z); vec4 y_=floor(j-7.0*x_);
+      vec4 x=x_*ns.x+ns.yyyy; vec4 y=y_*ns.x+ns.yyyy; vec4 h=1.0-abs(x)-abs(y);
+      vec4 b0=vec4(x.xy,y.xy); vec4 b1=vec4(x.zw,y.zw);
+      vec4 s0=floor(b0)*2.0+1.0; vec4 s1=floor(b1)*2.0+1.0; vec4 sh=-step(h,vec4(0.0));
+      vec4 a0=b0.xzyw+s0.xzyw*sh.xxyy; vec4 a1=b1.xzyw+s1.xzyw*sh.zzww;
+      vec3 p0=vec3(a0.xy,h.x); vec3 p1=vec3(a0.zw,h.y); vec3 p2=vec3(a1.xy,h.z); vec3 p3=vec3(a1.zw,h.w);
+      vec4 norm=taylorInvSqrt(vec4(dot(p0,p0),dot(p1,p1),dot(p2,p2),dot(p3,p3)));
+      p0*=norm.x; p1*=norm.y; p2*=norm.z; p3*=norm.w;
+      vec4 m=max(0.6-vec4(dot(x0,x0),dot(x1,x1),dot(x2,x2),dot(x3,x3)),0.0); m=m*m;
+      return 42.0*dot(m*m,vec4(dot(p0,x0),dot(p1,x1),dot(p2,x2),dot(p3,x3)));
+    }
+    float fbm(vec3 p){float f=0.0,a=0.5; for(int i=0;i<6;i++){f+=a*snoise(p); p=p*2.03+vec3(1.7,9.2,3.1); a*=0.5;} return f;}
+    float fbm3(vec3 p){float f=0.0,a=0.5; for(int i=0;i<3;i++){f+=a*snoise(p); p=p*2.03+vec3(1.7,9.2,3.1); a*=0.5;} return f;}
+    vec3 hash3(vec3 p){p=vec3(dot(p,vec3(127.1,311.7,74.7)),dot(p,vec3(269.5,183.3,246.1)),dot(p,vec3(113.5,271.9,124.6)));return fract(sin(p)*43758.5453);}
+  `;
+  const VERT = `attribute vec2 aPos; varying vec2 vUv; void main(){ vUv=aPos; gl_Position=vec4(aPos,0.0,1.0); }`;
+
+  const PLANET_FRAG = `precision highp float; varying vec2 vUv;
+    uniform int uType; uniform vec3 uC1,uC2,uC3,uAtmo,uLight;
+    uniform float uSeed,uSpin,uTilt,uAtmoStr,uMono,uPx,uStorm;
+    ${GLSL_NOISE}
+    float craters(vec3 p){ vec3 i=floor(p), f=fract(p); float c=0.0;
+      for(int x=-1;x<=1;x++) for(int y=-1;y<=1;y++) for(int z=-1;z<=1;z++){
+        vec3 g=vec3(float(x),float(y),float(z)); vec3 o=hash3(i+g);
+        float r=0.18+0.32*o.x*o.x; float d=length(g+o-f)/r;
+        c+= (d<1.0 ? (d*d-1.0)*0.55 : 0.0) + smoothstep(1.3,1.0,d)*smoothstep(0.75,1.0,d)*0.35;
+      } return c; }
+    vec3 rotY(vec3 p,float a){float c=cos(a),s=sin(a);return vec3(c*p.x+s*p.z,p.y,-s*p.x+c*p.z);}
+    vec3 rotZ(vec3 p,float a){float c=cos(a),s=sin(a);return vec3(c*p.x-s*p.y,s*p.x+c*p.y,p.z);}
+    void main(){
+      vec2 p=vUv*1.3; float r=length(p); vec3 L=normalize(uLight);
+      vec4 outc=vec4(0.0);
+      if(r>1.0-2.0*uPx && uAtmoStr>0.0){
+        float h=max(r-1.0,0.0);
+        float lit=smoothstep(-0.5,0.7,dot(normalize(vec3(p,0.2)),L));
+        float g=exp(-h*16.0)*uAtmoStr*lit*0.9;
+        outc=vec4(uAtmo*g,g);
+      }
+      if(r<1.0){
+        float z=sqrt(1.0-r*r); vec3 n=vec3(p,z);
+        vec3 q=rotY(rotZ(n,uTilt),uSpin);
+        vec3 s=vec3(uSeed*7.1,uSeed*3.3,uSeed*5.7);
+        vec3 col; float spec=0.0; float limb=1.0;
+        if(uType==0){
+          vec3 w=q+0.09*vec3(fbm3(q*3.0+s),fbm3(q*3.0+s+11.0),fbm3(q*3.0+s+23.0));
+          float t=w.y*8.0+fbm(vec3(w.x*2.0,w.y*26.0,w.z*2.0)+s)*0.8;
+          float band=0.5+0.5*sin(t*3.14159);
+          col=mix(uC1,uC2,band);
+          float fine=fbm(vec3(w.x*5.0,w.y*48.0,w.z*5.0)+s+40.0)*0.5+0.5;
+          col=mix(col,uC3,smoothstep(0.35,0.85,fine)*0.45);
+          col*=0.9+0.2*fine;
+          vec3 sp=normalize(vec3(0.55,-0.33,0.77));
+          float d=distance(q,sp)+0.03*fbm3(q*14.0);
+          float storm=smoothstep(0.2,0.07,d)*uStorm;
+          col=mix(col,vec3(0.72,0.36,0.22),storm*0.8);
+          col=mix(col,vec3(0.95,0.85,0.72),smoothstep(0.2,0.17,d)*smoothstep(0.1,0.17,d)*uStorm*0.4);
+          limb=0.5+0.5*pow(z,0.45);
+        } else if(uType==1){
+          float h=fbm(q*1.7+s)+0.3*fbm(q*6.5+s+3.0);
+          float land=smoothstep(0.03,0.07,h);
+          vec3 ocean=mix(vec3(0.01,0.04,0.13),vec3(0.03,0.16,0.32),smoothstep(-0.35,0.05,h));
+          vec3 ground=mix(vec3(0.10,0.24,0.08),vec3(0.36,0.32,0.20),smoothstep(0.08,0.45,h));
+          float arid=smoothstep(0.1,0.35,0.35-abs(q.y)+fbm3(q*5.0+s)*0.15);
+          ground=mix(ground,vec3(0.62,0.50,0.34),arid*0.65);
+          ground=mix(ground,vec3(0.55,0.53,0.50),smoothstep(0.5,0.75,h));
+          col=mix(ocean,ground,land);
+          float ice=smoothstep(0.74,0.8,abs(q.y)+0.07*fbm3(q*5.0+s));
+          col=mix(col,vec3(0.9,0.94,0.98),ice);
+          spec=(1.0-land)*(1.0-ice);
+          vec3 cq=rotY(q,uSpin*0.4+1.3);
+          float cl=fbm(cq*2.4+s+9.0)+0.45*fbm(vec3(cq.x*3.0,cq.y*9.0,cq.z*3.0)+s);
+          cl=smoothstep(0.08,0.6,cl);
+          col=mix(col,vec3(0.97),cl*0.92); spec*=1.0-cl;
+        } else if(uType==2 || uType==4){
+          float h=fbm(q*2.2+s);
+          col=mix(uC1,uC2,smoothstep(-0.5,0.5,h));
+          col=mix(col,uC3,smoothstep(0.15,0.7,fbm(q*7.0+s+5.0))*0.45);
+          float c=craters(q*4.5+s)+0.55*craters(q*10.0+s+2.0)+0.3*craters(q*22.0+s+4.0);
+          col*=1.0+c*(uType==2 ? 0.14 : 0.45);
+          if(uType==2) col=mix(col,uC3*0.8,smoothstep(0.25,0.6,fbm(q*1.3+s+30.0))*0.55);
+          if(uType==2){ float ice=smoothstep(0.88,0.93,abs(q.y)+0.04*fbm3(q*6.0)); col=mix(col,vec3(0.92,0.9,0.88),ice); }
+        } else {
+          float t=q.y*3.5+fbm(vec3(q.x*1.5,q.y*14.0,q.z*1.5)+s)*0.3;
+          col=mix(uC1,uC2,0.5+0.5*sin(t*3.14159));
+          col=mix(col,uC3,smoothstep(0.3,0.9,fbm3(q*3.0+s))*0.25);
+          limb=0.6+0.4*pow(z,0.5);
+        }
+        float ndl=dot(n,L);
+        float dif=clamp(ndl*1.08+0.04,0.0,1.0);
+        dif=pow(dif,0.8);
+        vec3 hv=normalize(L+vec3(0.0,0.0,1.0));
+        float sp2=spec*pow(max(dot(n,hv),0.0),70.0)*0.7;
+        vec3 lit=col*limb*dif + vec3(1.0,0.96,0.88)*sp2 + col*0.012;
+        float fr=pow(1.0-z,2.2);
+        lit+=uAtmo*fr*uAtmoStr*smoothstep(-0.25,0.45,ndl)*1.1;
+        if(uMono>0.5) lit=vec3(dot(lit,vec3(0.3,0.59,0.11)));
+        float a=smoothstep(1.0,1.0-uPx*1.5,r);
+        outc=vec4(lit*a,a)+outc*(1.0-a);
+      }
+      if(uMono>0.5) outc.rgb=vec3(dot(outc.rgb,vec3(0.3,0.59,0.11)));
+      gl_FragColor=outc;
+    }`;
+
+  const NEB_FRAG = `precision highp float; varying vec2 vUv;
+    uniform vec3 uC1,uC2; uniform float uSeed,uMono;
+    ${GLSL_NOISE}
+    void main(){
+      vec2 p=vUv;
+      vec3 s=vec3(uSeed*13.1,uSeed*7.7,uSeed*1.3);
+      vec3 q=vec3(p*1.5,0.0)+s;
+      vec3 w=q+vec3(fbm(q),fbm(q+5.2),fbm(q+9.4))*1.1;
+      float d=fbm(w*1.2)*0.5+0.5;
+      float fil=1.0-abs(fbm3(w*2.0+3.0)); fil=pow(fil,5.0);
+      float mask=smoothstep(1.0,0.1,length(p)*(0.85+0.35*(fbm3(q*0.7+9.0)*0.5+0.5)));
+      float dens=pow(d,2.4)*mask;
+      vec3 col=mix(uC1,uC2,smoothstep(0.3,0.75,fbm(w*0.8+7.0)*0.5+0.5));
+      col+=mix(uC2,vec3(1.0),0.3)*fil*mask*0.3;
+      float dust=smoothstep(0.52,0.72,fbm(w*2.0+20.0)*0.5+0.5);
+      dens*=1.0-dust*0.85;
+      float a=clamp(dens*1.25+fil*mask*0.15,0.0,1.0);
+      if(uMono>0.5) col=vec3(dot(col,vec3(0.3,0.59,0.11)));
+      gl_FragColor=vec4(col*a,a);
+    }`;
+
+  const SKY_FRAG = `precision highp float; varying vec2 vUv;
+    uniform float uAspect,uSeed,uMono; uniform vec3 uBg;
+    ${GLSL_NOISE}
+    void main(){
+      vec2 p=vUv; p.x*=uAspect;
+      float ang=-0.42; vec2 b=vec2(cos(ang)*p.x-sin(ang)*p.y, sin(ang)*p.x+cos(ang)*p.y);
+      float prof=exp(-b.y*b.y*6.0);
+      vec3 q=vec3(b*1.8,uSeed);
+      float n=fbm(q)*0.5+0.5; float fine=fbm(q*4.0+3.0)*0.5+0.5;
+      float glow=prof*(0.3+0.9*n)*(0.55+0.7*fine);
+      float lane=smoothstep(0.42,0.7,fbm(vec3(b.x*1.4,b.y*6.0,uSeed+4.0))*0.5+0.5)*exp(-b.y*b.y*26.0);
+      lane=max(lane, smoothstep(0.55,0.8,fbm(vec3(b*5.0,uSeed+8.0))*0.5+0.5)*prof*0.7);
+      glow*=1.0-lane*0.9;
+      float core=exp(-pow(b.x-0.45,2.0)*1.4-b.y*b.y*12.0);
+      vec3 tint=mix(vec3(0.55,0.62,0.85),vec3(1.0,0.8,0.58),core);
+      vec3 c=tint*glow*0.2 + vec3(1.0,0.82,0.6)*core*0.1*(1.0-lane*0.85);
+      c+=vec3(0.025,0.03,0.05)*(fbm3(vec3(p*0.7,uSeed+9.0))*0.5+0.5);
+      if(uMono>0.5) c=vec3(dot(c,vec3(0.3,0.59,0.11)));
+      gl_FragColor=vec4(uBg+c,1.0);
+    }`;
+
+  const GL = (() => {
+    try {
+      const canvas = document.createElement('canvas');
+      const gl = canvas.getContext('webgl', { premultipliedAlpha: true, alpha: true, preserveDrawingBuffer: true, antialias: false });
+      if (!gl) return null;
+      const buf = gl.createBuffer();
+      gl.bindBuffer(gl.ARRAY_BUFFER, buf);
+      gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([-1, -1, 1, -1, -1, 1, 1, 1]), gl.STATIC_DRAW);
+      function program(fsrc) {
+        const mk = (type, src) => {
+          const sh = gl.createShader(type); gl.shaderSource(sh, src); gl.compileShader(sh);
+          if (!gl.getShaderParameter(sh, gl.COMPILE_STATUS)) throw new Error(gl.getShaderInfoLog(sh));
+          return sh;
+        };
+        const pr = gl.createProgram();
+        gl.attachShader(pr, mk(gl.VERTEX_SHADER, VERT)); gl.attachShader(pr, mk(gl.FRAGMENT_SHADER, fsrc));
+        gl.linkProgram(pr);
+        if (!gl.getProgramParameter(pr, gl.LINK_STATUS)) throw new Error(gl.getProgramInfoLog(pr));
+        const u = {}, n = gl.getProgramParameter(pr, gl.ACTIVE_UNIFORMS);
+        for (let i = 0; i < n; i++) { const name = gl.getActiveUniform(pr, i).name; u[name] = gl.getUniformLocation(pr, name); }
+        return { pr, u, a: gl.getAttribLocation(pr, 'aPos') };
+      }
+      const progs = { planet: program(PLANET_FRAG), neb: program(NEB_FRAG), sky: program(SKY_FRAG) };
+      function run(name, w, h, uniforms) {
+        const P = progs[name];
+        if (canvas.width !== w || canvas.height !== h) { canvas.width = w; canvas.height = h; }
+        gl.viewport(0, 0, w, h);
+        gl.useProgram(P.pr);
+        gl.bindBuffer(gl.ARRAY_BUFFER, buf);
+        gl.enableVertexAttribArray(P.a);
+        gl.vertexAttribPointer(P.a, 2, gl.FLOAT, false, 0, 0);
+        for (const k in uniforms) {
+          const loc = P.u[k]; if (!loc) continue;
+          const v = uniforms[k];
+          if (k === 'uType') gl.uniform1i(loc, v);
+          else if (Array.isArray(v)) gl.uniform3fv(loc, v);
+          else gl.uniform1f(loc, v);
+        }
+        gl.clearColor(0, 0, 0, 0); gl.clear(gl.COLOR_BUFFER_BIT);
+        gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
+        return canvas;
+      }
+      return { canvas, run };
+    } catch (err) {
+      console.warn('Realistic rendering unavailable, using simple mode:', err && err.message);
+      return null;
+    }
+  })();
+
+  // Real planet catalogue: gas giants, a ringed giant, an Earth-like world, a Mars-like world, an ice giant, a cratered moon
+  const REAL_PLANETS = [
+    { type: 0, c1: [0.86, 0.74, 0.58], c2: [0.60, 0.38, 0.22], c3: [0.96, 0.92, 0.85], atmo: [0.95, 0.78, 0.58], atmoStr: 0.35, storm: 1 },
+    { type: 0, c1: [0.89, 0.81, 0.62], c2: [0.74, 0.62, 0.42], c3: [0.97, 0.92, 0.78], atmo: [0.95, 0.86, 0.62], atmoStr: 0.3, storm: 0, ring: [214, 196, 160] },
+    { type: 1, c1: [0, 0, 0], c2: [0, 0, 0], c3: [0, 0, 0], atmo: [0.35, 0.6, 1.0], atmoStr: 1.0, storm: 0 },
+    { type: 2, c1: [0.50, 0.22, 0.11], c2: [0.80, 0.47, 0.27], c3: [0.32, 0.18, 0.11], atmo: [0.95, 0.62, 0.45], atmoStr: 0.28, storm: 0 },
+    { type: 3, c1: [0.22, 0.42, 0.85], c2: [0.32, 0.56, 0.94], c3: [0.78, 0.88, 1.0], atmo: [0.45, 0.7, 1.0], atmoStr: 0.65, storm: 0, ring: [160, 190, 220], faintRing: true },
+    { type: 4, c1: [0.30, 0.29, 0.28], c2: [0.62, 0.60, 0.58], c3: [0.44, 0.43, 0.42], atmo: [0, 0, 0], atmoStr: 0, storm: 0 }
+  ];
+  const SUN = [-0.55, 0.42, 0.72];
+  let planetCap = matchMedia('(pointer: coarse)').matches ? 512 : 1024;
+
+  function drawRealPlanet(p, k, px, py, R, alpha, now) {
+    if (R < 0.8 || alpha <= 0) return;
+    const S = Math.min(planetCap, Math.max(64, 2 ** Math.ceil(Math.log2(R * 2.6))));
+    const half = R * 1.3;
+    ctx.save();
+    ctx.globalAlpha = alpha;
+    if (k.ring) realRing(px, py, R, p.tilt, Math.PI, Math.PI * 2, k);
+    const img = GL.run('planet', S, S, {
+      uType: k.type, uC1: k.c1, uC2: k.c2, uC3: k.c3, uAtmo: k.atmo, uLight: SUN,
+      uSeed: p.seed, uSpin: p.seed * 3 + now * 0.00005 * (k.type === 0 || k.type === 3 ? 1.6 : 1),
+      uTilt: p.tilt * 0.4, uAtmoStr: k.atmoStr, uMono: TH.mono ? 1 : 0, uPx: 2.6 / S, uStorm: k.storm
+    });
+    ctx.drawImage(img, px - half, py - half, half * 2, half * 2);
+    if (k.ring) realRing(px, py, R, p.tilt, 0, Math.PI, k);
+    ctx.restore();
+  }
+  function realRing(px, py, R, tilt, a0, a1, k) {
+    const [r, g, b] = TH.mono ? [200, 200, 200] : k.ring;
+    const f = k.faintRing ? 0.35 : 1;
+    const ri = R * 1.22, ro = R * 2.25;
+    ctx.save();
+    ctx.translate(px, py); ctx.rotate(tilt); ctx.scale(1, 0.24);
+    const gr = ctx.createRadialGradient(0, 0, ri, 0, 0, ro);
+    const stops = [[0, 0], [0.06, 0.12], [0.22, 0.28], [0.3, 0.55], [0.5, 0.75], [0.62, 0.6], [0.64, 0.05], [0.68, 0.06], [0.7, 0.5], [0.86, 0.42], [0.88, 0.12], [0.9, 0.35], [0.96, 0.25], [1, 0]];
+    for (const [o, a] of stops) gr.addColorStop(o, `rgba(${r},${g},${b},${a * f})`);
+    ctx.fillStyle = gr;
+    ctx.beginPath(); ctx.arc(0, 0, ro, a0, a1); ctx.arc(0, 0, ri, a1, a0, true); ctx.closePath(); ctx.fill();
+    // the planet's shadow falls across the far side of the ring, away from the sun
+    if (a0 !== 0) {
+      ctx.clip();
+      ctx.fillStyle = 'rgba(0,0,0,.6)';
+      ctx.beginPath(); ctx.ellipse(R * 0.75, -R * 1.9, R * 0.95, R * 1.7, 0.25, 0, Math.PI * 2); ctx.fill();
+    }
+    ctx.restore();
+  }
+
+  // Nebula sprites, made once per theme
+  let nebSprites = [];
+  const NEB_PAIRS = [
+    [[0.85, 0.22, 0.25], [1.0, 0.62, 0.45]],   // hydrogen-alpha red
+    [[0.12, 0.45, 0.62], [0.45, 0.9, 0.82]],   // oxygen teal
+    [[0.22, 0.28, 0.75], [0.72, 0.55, 0.95]],  // reflection blue-violet
+    [[0.62, 0.18, 0.45], [0.98, 0.55, 0.62]]   // mixed pink
+  ];
+  function buildNebSprites() {
+    nebSprites = [];
+    if (!GL || TH.style !== 'real') return;
+    const size = matchMedia('(pointer: coarse)').matches ? 256 : 384;
+    NEB_PAIRS.forEach(([c1, c2], i) => {
+      for (let v = 0; v < 2; v++) {
+        const img = GL.run('neb', size, size, { uC1: c1, uC2: c2, uSeed: i * 3.7 + v * 11.3 + 1.1, uMono: TH.mono ? 1 : 0 });
+        const c = document.createElement('canvas'); c.width = size; c.height = size;
+        const cx2 = c.getContext('2d');
+        cx2.filter = 'blur(' + Math.round(size / 160) + 'px)';
+        cx2.drawImage(img, 0, 0);
+        nebSprites.push(c);
+      }
+    });
+  }
+
+  // Glow for bright nearby stars, with faint diffraction spikes
+  const starGlow = (() => {
+    const s = 64, c = document.createElement('canvas'); c.width = c.height = s;
+    const g = c.getContext('2d');
+    const rg = g.createRadialGradient(s / 2, s / 2, 0, s / 2, s / 2, s / 2);
+    rg.addColorStop(0, 'rgba(255,255,255,1)'); rg.addColorStop(0.08, 'rgba(255,255,255,.8)');
+    rg.addColorStop(0.25, 'rgba(255,255,255,.18)'); rg.addColorStop(1, 'rgba(255,255,255,0)');
+    g.fillStyle = rg; g.fillRect(0, 0, s, s);
+    g.globalCompositeOperation = 'lighter';
+    for (const [w, h] of [[s, 1.2], [1.2, s]]) {
+      const lg = w > h ? g.createLinearGradient(0, 0, s, 0) : g.createLinearGradient(0, 0, 0, s);
+      lg.addColorStop(0, 'rgba(255,255,255,0)'); lg.addColorStop(0.5, 'rgba(255,255,255,.55)'); lg.addColorStop(1, 'rgba(255,255,255,0)');
+      g.fillStyle = lg; g.fillRect((s - w) / 2, (s - h) / 2, w, h);
+    }
+    return c;
+  })();
 
   // ---------- layout ----------
   function resize() {
@@ -482,20 +789,35 @@ body.idle #space { cursor: none; }
     bandCanvas = document.createElement('canvas');
     bandCanvas.width = W; bandCanvas.height = H;
     const b = bandCanvas.getContext('2d');
+    const realSky = GL && TH.style === 'real';
     b.fillStyle = TH.bg; b.fillRect(0, 0, W, H);
+    if (realSky) {
+      // Milky Way band with dust lanes and a warm galactic core, rendered by the sky shader at half resolution
+      const sw = Math.min(1600, Math.round(W / 2)), sh = Math.max(1, Math.round(sw * H / W));
+      const hex = TH.bg.match(/\w\w/g).map(h => parseInt(h, 16) / 255);
+      const img = GL.run('sky', sw, sh, { uAspect: W / H, uSeed: 3.7, uMono: TH.mono ? 1 : 0, uBg: hex });
+      b.imageSmoothingQuality = 'high';
+      b.drawImage(img, 0, 0, W, H);
+    }
     b.save(); b.translate(W / 2, H / 2); b.rotate(-0.42);
-    const g = b.createLinearGradient(0, -H * 0.35, 0, H * 0.35);
-    g.addColorStop(0, `rgba(${TH.band},0)`); g.addColorStop(0.42, `rgba(${TH.band},.06)`);
-    g.addColorStop(0.5, `rgba(${TH.band},.12)`); g.addColorStop(0.58, `rgba(${TH.band},.06)`); g.addColorStop(1, `rgba(${TH.band},0)`);
-    b.fillStyle = g; b.fillRect(-W, -H * 0.35, W * 2, H * 0.7);
-    for (let i = 0; i < TH.dustCount; i++) {
-      const spread = TH.style === 'toon' ? 0.9 : 0.2;
+    if (!realSky) {
+      const g = b.createLinearGradient(0, -H * 0.35, 0, H * 0.35);
+      g.addColorStop(0, `rgba(${TH.band},0)`); g.addColorStop(0.42, `rgba(${TH.band},.06)`);
+      g.addColorStop(0.5, `rgba(${TH.band},.12)`); g.addColorStop(0.58, `rgba(${TH.band},.06)`); g.addColorStop(1, `rgba(${TH.band},0)`);
+      b.fillStyle = g; b.fillRect(-W, -H * 0.35, W * 2, H * 0.7);
+    }
+    const dustN = realSky ? TH.dustCount * 2 : TH.dustCount;
+    for (let i = 0; i < dustN; i++) {
+      const spread = TH.style === 'toon' ? 0.9 : realSky && i % 3 === 0 ? 0.8 : 0.2;
       const x = (Math.random() * 2 - 1) * W, y = (Math.random() + Math.random() + Math.random() - 1.5) * H * spread;
-      b.fillStyle = `rgba(${TH.dust},${(TH.style === 'toon' ? 0.25 : 0) + Math.random() * 0.35})`;
+      const dc = realSky ? TH.stars[(Math.random() * TH.stars.length) | 0] : null;
+      b.fillStyle = dc ? dc : `rgba(${TH.dust},${(TH.style === 'toon' ? 0.25 : 0) + Math.random() * 0.35})`;
+      if (dc) b.globalAlpha = 0.15 + Math.random() * Math.random() * 0.7;
       const s = DPR * TH.dustSize * (Math.random() < 0.1 ? 1.7 : 1);
       if (TH.style === 'toon') { b.beginPath(); b.arc(x, y, s, 0, Math.PI * 2); b.fill(); }
       else b.fillRect(x, y, s, s);
     }
+    b.globalAlpha = 1;
     b.restore();
   }
 
@@ -510,6 +832,7 @@ body.idle #space { cursor: none; }
     document.querySelectorAll('.theme-card').forEach(c => c.setAttribute('aria-checked', String(c.dataset.themeId === id)));
     try { localStorage.setItem('dfc-theme', id); } catch (e) {}
     if (W) { buildFrame(); buildBand(); }
+    buildNebSprites();
     if (fromUser) flash = 1;
   }
   function openPanel(open) {
@@ -769,7 +1092,10 @@ body.idle #space { cursor: none; }
       if (p.z < 0.15 || px + R * 2 < 0 || px - R * 2 > W || py - R * 2 > H || py + R * 2 < 0) {
         if (p.z < 3) { planet = null; nextPlanetAt = travel + 7 + Math.random() * 9; }
       } else {
-        const k = TH.planets[p.ki % TH.planets.length], a = Math.min(1, (10.5 - p.z) / 3);
+        const a = Math.min(1, (10.5 - p.z) / 3);
+        const real = GL && TH.style === 'real';
+        const k = real ? REAL_PLANETS[p.ki % REAL_PLANETS.length] : TH.planets[p.ki % TH.planets.length];
+        if (real) drawRealPlanet(p, k, px, py, R, a, now); else
         if (TH.style === 'toon') drawToonPlanet(p, k, px, py, R, a);
         else if (TH.style === 'neon') drawNeonPlanet(p, k, px, py, R, a);
         else drawPlanet(p, k, px, py, R, a);
@@ -826,6 +1152,15 @@ body.idle #space { cursor: none; }
       const px = vpx + (n.x / n.z) * F, py = vpy + (n.y / n.z) * F, R = (n.r / n.z) * F;
       const fade = Math.min(1, (10 - n.z) / 3) * Math.min(1, (n.z - 0.6) / 1.2);
       if (fade <= 0 || px + R < 0 || px - R > W || py + R < 0 || py - R > H) continue;
+      if (nebSprites.length) {
+        // real nebulae are faint; they also thin out as you fly into them
+        const near = Math.min(1, (n.z - 0.6) / 2.5) * Math.min(1, (Math.max(W, H) * 1.6) / (R * 2));
+        ctx.globalCompositeOperation = 'screen';
+        ctx.globalAlpha = Math.min(1, fade * near * (0.1 + n.a * 0.9));
+        ctx.drawImage(nebSprites[n.ci % nebSprites.length], px - R, py - R, R * 2, R * 2);
+        ctx.globalAlpha = 1;
+        continue;
+      }
       const col = TH.nebs[n.ci % TH.nebs.length], a = n.a * fade * TH.nebAlpha;
       const g = ctx.createRadialGradient(px, py, 0, px, py, R);
       if (toon) {
@@ -846,6 +1181,7 @@ body.idle #space { cursor: none; }
 
   function drawStars(vel, dt, warp) {
     const trail = vel * 0.045 + 0.0015;
+    const NC = TH.stars.length;
     const xmin = -W * 0.2, xmax = W * 1.2, ymin = -H * 0.2, ymax = H * 1.2;
     for (let i = 0; i < N; i++) {
       let z = sz[i] - vel * dt;
@@ -857,12 +1193,12 @@ body.idle #space { cursor: none; }
       sX1[i] = x1; sY1[i] = y1;
       sX2[i] = vpx + (sx[i] / z2) * F; sY2[i] = vpy + (sy[i] / z2) * F;
       const band = z < 0.22 ? 3 : z < 0.45 ? 2 : z < 0.72 ? 1 : 0;
-      sB[i] = band * 3 + sc[i];
+      sB[i] = band * NC + (sc[i] % NC);
     }
     ctx.lineCap = 'round';
     ctx.globalCompositeOperation = TH.starBlend;
-    for (let b = 0; b < 12; b++) {
-      const band = (b / 3) | 0, col = b % 3;
+    for (let b = 0; b < 4 * NC; b++) {
+      const band = (b / NC) | 0, col = b % NC;
       ctx.beginPath();
       let any = false;
       for (let i = 0; i < N; i++) {
@@ -871,9 +1207,21 @@ body.idle #space { cursor: none; }
       }
       if (!any) continue;
       ctx.globalAlpha = TH.style === 'toon' ? Math.min(1, BAND_A[band] + 0.2) : BAND_A[band];
-      ctx.strokeStyle = warp > 0.3 && col === 0 ? TH.warpStar : TH.stars[col];
+      ctx.strokeStyle = warp > 0.3 && col < 2 ? TH.warpStar : TH.stars[col];
       ctx.lineWidth = BAND_W[band] * DPR * TH.starW * (1 + warp * 0.4);
       ctx.stroke();
+    }
+    // bright nearby stars get a soft glow and faint spikes (only while slow enough to read as points)
+    if (TH.style === 'real' && vel < 0.6) {
+      ctx.globalCompositeOperation = 'lighter';
+      const k = 1 - vel / 0.6;
+      for (let i = 0; i < N; i++) {
+        if (!sbr[i] || sB[i] < 0) continue;
+        const z = sz[i]; if (z > 0.7) continue;
+        const sz2 = (10 + (0.7 - z) * 46) * DPR;
+        ctx.globalAlpha = Math.min(1, (0.7 - z) * 2.2) * 0.75 * k;
+        ctx.drawImage(starGlow, sX1[i] - sz2 / 2, sY1[i] - sz2 / 2, sz2, sz2);
+      }
     }
     ctx.globalAlpha = 1;
     ctx.globalCompositeOperation = 'source-over';
@@ -1089,7 +1437,8 @@ body.idle #space { cursor: none; }
     slowStreak = fps < 42 ? slowStreak + 1 : 0;
     if (slowStreak < 2) return;
     slowStreak = 0;
-    if (N > 500) N = Math.floor(N * 0.7);
+    if (planetCap > 384 && planet) planetCap = planetCap / 2;
+    else if (N > 500) N = Math.floor(N * 0.7);
     else if (dprCap > 1) { dprCap = 1; resize(); }
     else if (nebs.length > 3) nebs.length = 3;
   }
