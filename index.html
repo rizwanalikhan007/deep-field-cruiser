@@ -78,7 +78,7 @@ body {
 @media (max-width: 1320px) { .topline .hint { display: none; } }
 @media (max-width: 980px) { .topline .dest { display: none; } }
 
-.theme-btn, .presets button, .sound {
+.theme-btn, .presets button, .sound, .fact-actions button {
   pointer-events: auto;
   font: 500 11px/1 var(--font-data); letter-spacing: .1em; text-transform: uppercase;
   color: var(--ink); background: var(--glass-btn); border: 1px solid var(--glass-edge); border-radius: var(--radius);
@@ -88,8 +88,8 @@ body {
 .theme-btn { background: var(--glass); -webkit-backdrop-filter: blur(14px) saturate(150%); backdrop-filter: blur(14px) saturate(150%); }
 .theme-btn { display: inline-flex; align-items: center; gap: 8px; }
 .theme-btn .dot { width: 12px; height: 12px; border-radius: 50%; background: var(--swatch, linear-gradient(135deg, var(--signal), var(--heat))); box-shadow: 0 0 0 1px var(--btn-edge); }
-.theme-btn:hover, .presets button:hover, .sound:hover { border-color: var(--signal); color: var(--signal); }
-.theme-btn:focus-visible, .presets button:focus-visible, .sound:focus-visible, .theme-card:focus-visible { outline: 2px solid var(--signal); outline-offset: 2px; }
+.theme-btn:hover, .presets button:hover, .sound:hover, .fact-actions button:hover { border-color: var(--signal); color: var(--signal); }
+.theme-btn:focus-visible, .presets button:focus-visible, .sound:focus-visible, .fact-actions button:focus-visible, .dest-row:focus-visible, .theme-card:focus-visible { outline: 2px solid var(--signal); outline-offset: 2px; }
 
 .theme-panel {
   position: fixed; z-index: 4;
@@ -186,7 +186,8 @@ input[type=range]:focus-visible { outline: 2px solid var(--signal); outline-offs
 
 .nav { display: grid; gap: 10px; }
 .nav .row { display: flex; justify-content: space-between; gap: 12px; align-items: baseline; }
-.nav .val { font-size: 14px; font-variant-numeric: tabular-nums; color: var(--ink); text-align: right; white-space: nowrap; }
+.nav .val { font-size: 14px; font-variant-numeric: tabular-nums; color: var(--ink); text-align: right; white-space: nowrap; min-width: 0; overflow: hidden; text-overflow: ellipsis; }
+.nav .row > .label { flex-shrink: 0; }
 .sound { justify-self: start; }
 .sound[aria-pressed="true"] { color: var(--signal); border-color: var(--signal); }
 
@@ -216,10 +217,42 @@ body.idle #space { cursor: none; }
   padding: 9px 14px; font-size: 12px; letter-spacing: .04em; max-width: calc(100vw - 32px); text-align: center;
   box-shadow: 0 10px 30px rgba(0,0,0,.5);
 }
+.jump-btn svg { width: 14px; height: 14px; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; }
+.jump-btn { color: var(--signal); border-color: var(--glass-edge); }
+.dest-list { display: grid; gap: 6px; max-height: min(62vh, 540px); overflow-y: auto; }
+.dest-row {
+  display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 2px 12px; text-align: left; padding: 10px 12px; cursor: pointer;
+  background: var(--glass-btn); border: 1px solid var(--glass-edge); border-radius: var(--radius); color: var(--ink); font: inherit;
+}
+.dest-row .dn { font-family: var(--font-display); font-size: 15px; font-weight: 600; }
+.dest-row .dt { grid-column: 1; color: var(--dim); font-size: 11px; }
+.dest-row .dd { grid-column: 2; grid-row: 1 / 3; align-self: center; font-size: 11.5px; color: var(--signal); font-variant-numeric: tabular-nums; white-space: nowrap; }
+.dest-row:hover { border-color: var(--signal); }
+.dest-row.here { opacity: .6; }
+.dest-row.here .dd { color: var(--dim); }
+.dest-note { margin: 0; font-size: 11px; color: var(--dim); line-height: 1.5; }
+.countdown { position: fixed; inset: 0; z-index: 4; display: grid; place-content: center; justify-items: center; gap: 4px; pointer-events: none; text-align: center; padding: 16px; }
+.cd-label { font-size: 12px; letter-spacing: .2em; text-transform: uppercase; color: var(--ink); opacity: .85; }
+.cd-num { font-family: var(--font-display); font-weight: 600; font-size: clamp(96px, 16vw, 180px); line-height: 1; color: var(--ink); text-shadow: 0 0 40px var(--signal), 0 0 90px var(--signal); }
+.fact {
+  position: fixed; z-index: 3; left: max(16px, env(safe-area-inset-left, 0px)); top: calc(env(safe-area-inset-top, 0px) + 56px);
+  width: min(380px, calc(100vw - 32px)); padding: 16px 18px; display: grid; gap: 6px;
+  background: var(--glass); border: 1px solid var(--glass-edge); border-radius: var(--glass-radius);
+  -webkit-backdrop-filter: blur(18px) saturate(150%); backdrop-filter: blur(18px) saturate(150%);
+  box-shadow: 0 16px 40px rgba(0,0,0,.3); animation: factIn .7s ease;
+}
+.fact h2 { margin: 0; font-family: var(--font-display); font-size: 26px; font-weight: 600; line-height: 1.1; text-wrap: balance; }
+.fact-type { font-size: 11.5px; color: var(--signal); letter-spacing: .04em; }
+.fact p { margin: 4px 0 6px; font-size: 13px; line-height: 1.6; color: var(--ink); max-width: 60ch; }
+.fact-actions { display: flex; gap: 8px; }
+@keyframes factIn { from { opacity: 0; transform: translateY(-10px); } }
+@media (prefers-reduced-motion: reduce) { .fact { animation: none; } }
 .noscript { position: fixed; inset: 0; display: grid; place-items: center; padding: 24px; text-align: center; color: var(--ink); background: var(--void); z-index: 10; }
 
+@media (max-width: 520px) { .topline > span:first-child { display: none; } .topline { justify-content: flex-end; } }
 @media (max-width: 760px) {
-  .theme-btn #themeName { display: none; }
+  .theme-btn #themeName, .jump-btn .lbl { display: none; }
+  .fact { top: auto; bottom: calc(env(safe-area-inset-bottom, 0px) + 200px); }
   .topline b { letter-spacing: .1em; font-size: 11px; }
   .tools { gap: 4px; }
   .topline .right { gap: 6px; }
@@ -243,9 +276,12 @@ body.idle #space { cursor: none; }
 <canvas id="space" aria-label="View through the cockpit window of a ship flying through space"></canvas>
 
 <div class="topline">
-  <span><b>Deep Field Cruiser</b><span class="dest"> &nbsp;· bound for Proxima Centauri</span></span>
+  <span><b>Deep Field Cruiser</b><span class="dest" id="destLabel"> · near the Sun</span></span>
   <span class="right">
     <span class="hint">↑ ↓ or W / S to throttle · Space to stop · T themes · C cockpit · H hide controls</span>
+    <button type="button" class="theme-btn jump-btn" id="destBtn" aria-haspopup="true" aria-expanded="false" aria-controls="destPanel" title="Hyperspace jump (J)">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M12 2v4M12 18v4M2 12h4M18 12h4M5 5l2.5 2.5M16.5 16.5 19 19M19 5l-2.5 2.5M7.5 16.5 5 19"/></svg><span class="lbl">Jump</span>
+    </button>
     <button type="button" class="theme-btn" id="themeBtn" aria-haspopup="true" aria-expanded="false" aria-controls="themePanel" title="Change theme">
       <span class="dot" aria-hidden="true"></span><span id="themeName">Deep Space</span>
     </button>
@@ -269,6 +305,22 @@ body.idle #space { cursor: none; }
   </span>
 </div>
 <div class="toast" id="toast" role="status" aria-live="polite" hidden></div>
+<div class="theme-panel dest-panel" id="destPanel" role="dialog" aria-label="Hyperspace destinations" hidden>
+  <div class="label">Hyperspace destinations</div>
+  <div class="dest-list" id="destList"></div>
+  <p class="dest-note">Real objects at their real distances. A jump takes about seven seconds.</p>
+</div>
+<div class="countdown" id="countdown" aria-live="assertive" hidden>
+  <div class="cd-label">Hyperspace jump to <span id="jumpTo"></span></div>
+  <div class="cd-num" id="countNum">3</div>
+</div>
+<div class="fact" id="fact" role="status" hidden>
+  <div class="label">Arrived</div>
+  <h2 id="factName"></h2>
+  <div class="fact-type" id="factType"></div>
+  <p id="factText"></p>
+  <div class="fact-actions"><button type="button" id="factNext">Next jump</button><button type="button" id="factClose">Close</button></div>
+</div>
 <noscript><div class="noscript">Deep Field Cruiser needs JavaScript turned on to fly.</div></noscript>
 
 <div class="theme-panel" id="themePanel" role="radiogroup" aria-label="Universe theme" hidden>
@@ -307,7 +359,7 @@ body.idle #space { cursor: none; }
 
     <div class="nav">
       <div class="row"><span class="label">Travelled</span><span class="val" id="dist">0.00 AU</span></div>
-      <div class="row"><span class="label">Proxima ETA</span><span class="val" id="eta">—</span></div>
+      <div class="row"><span class="label">Location</span><span class="val" id="locName">Solar System</span></div>
       <div class="row dilation"><span class="label" id="gLabel">Time dilation</span><span class="val" id="gamma">γ 1.000</span></div>
       <button type="button" class="sound" id="sound" aria-pressed="false">Sound: off</button>
     </div>
@@ -587,7 +639,7 @@ body.idle #space { cursor: none; }
       vec3 w=q+vec3(fbm(q),fbm(q+5.2),fbm(q+9.4))*1.1;
       float d=fbm(w*1.2)*0.5+0.5;
       float fil=1.0-abs(fbm3(w*2.0+3.0)); fil=pow(fil,5.0);
-      float mask=smoothstep(1.0,0.1,length(p)*(0.85+0.35*(fbm3(q*0.7+9.0)*0.5+0.5)));
+      float mask=smoothstep(1.0,0.1,length(p)*(0.85+0.35*(fbm3(q*0.7+9.0)*0.5+0.5)))*smoothstep(1.0,0.78,max(abs(p.x),abs(p.y)));
       float dens=pow(d,2.4)*mask;
       vec3 col=mix(uC1,uC2,smoothstep(0.3,0.75,fbm(w*0.8+7.0)*0.5+0.5));
       col+=mix(uC2,vec3(1.0),0.3)*fil*mask*0.3;
@@ -619,6 +671,162 @@ body.idle #space { cursor: none; }
       gl_FragColor=vec4(uBg+c,1.0);
     }`;
 
+  // Black hole: rays are traced through curved spacetime (Schwarzschild photon paths), so the background
+  // bends around it, a photon ring forms, and the far side of the accretion disk shows above and below the hole.
+  const BH_FRAG = `precision highp float; varying vec2 vUv;
+    uniform sampler2D uSky; uniform vec2 uRes, uVp, uSkyOff; uniform vec3 uBH;
+    uniform float uF, uTime, uMono, uDisk;
+    ${GLSL_NOISE}
+    vec3 skyAt(vec3 d){
+      if(d.z>0.02){
+        vec2 sp=uVp+vec2(d.x/d.z,-d.y/d.z)*uF;
+        vec2 uv=(sp-uSkyOff)/uRes;
+        if(uv.x>0.0&&uv.x<1.0&&uv.y>0.0&&uv.y<1.0) return texture2D(uSky,uv).rgb;
+      }
+      float s=pow(max(snoise(d*180.0),0.0),18.0)*2.0;
+      return vec3(0.012,0.014,0.025)+vec3(s);
+    }
+    vec4 diskShade(vec3 q, vec3 v, vec3 N){
+      float rr=length(q);
+      float w=0.45/pow(rr,1.5);
+      float ca=cos(uTime*w), sa=sin(uTime*w);
+      vec3 q2=vec3(ca*q.x-sa*q.z, q.y, sa*q.x+ca*q.z);
+      float n=fbm(vec3(q2.x*0.55,q2.z*0.55,rr*0.9))*0.5+0.5;
+      float fil=pow(1.0-abs(snoise(vec3(rr*2.2,q2.x*0.25,q2.z*0.25))),3.0);
+      float temp=pow(2.6/rr,0.8);
+      vec3 base=mix(vec3(0.9,0.28,0.06),vec3(1.0,0.72,0.42),temp);
+      base=mix(base,vec3(1.0,0.96,0.9),smoothstep(0.75,1.0,temp));
+      vec3 vd=normalize(cross(N,q))*sqrt(0.5/(rr-1.0));
+      float g=1.0/max(0.25,1.0+dot(vd,normalize(v)));
+      float inten=pow(temp,1.6)*4.2*pow(g,3.0)*(0.45+0.9*n)*(0.7+0.5*fil);
+      float da=smoothstep(14.5,6.5,rr)*smoothstep(2.4,3.2,rr)*(0.6+0.4*n)*uDisk;
+      return vec4(base*inten*da, da*0.9);
+    }
+    void main(){
+      vec2 px=(vUv*0.5+0.5)*uRes; px.y=uRes.y-px.y;
+      vec3 v=normalize(vec3((px.x-uVp.x)/uF,-(px.y-uVp.y)/uF,1.0));
+      vec3 p=-uBH;
+      vec3 N=normalize(vec3(0.0,1.0,0.24));
+      bool hole=false;
+      vec3 h1q=vec3(0.0), h1v=vec3(0.0), h2q=vec3(0.0), h2v=vec3(0.0), h3q=vec3(0.0), h3v=vec3(0.0);
+      float hits=0.0;
+      float R0=60.0; float tca=-dot(p,v); vec3 cp=p+v*tca; float b=length(cp);
+      bool traced=false;
+      if(b<R0 && tca>0.0){
+        float th=sqrt(R0*R0-b*b); if(length(p)>R0) p=p+v*(tca-th);
+        traced=true;
+        float prevSide=dot(p,N);
+        for(int i=0;i<300;i++){
+          float r=length(p);
+          if(r<1.0){ hole=true; break; }
+          float dt=clamp(0.045*r,0.012,3.0);
+          vec3 h=cross(p,v); float h2=dot(h,h);
+          v+=(-1.5*h2*p/(r*r*r*r*r))*dt;
+          p+=v*dt;
+          float side=dot(p,N);
+          if(side*prevSide<0.0){
+            vec3 ph=p-v*dt*(side/(side-prevSide));
+            vec3 q=ph-N*dot(ph,N); float rr=length(q);
+            if(rr>2.4&&rr<15.0){
+              if(hits<0.5){h1q=q;h1v=v;} else if(hits<1.5){h2q=q;h2v=v;} else if(hits<2.5){h3q=q;h3v=v;}
+              hits+=1.0;
+            }
+          }
+          prevSide=side;
+          if(r>R0+1.0 && dot(p,v)>0.0) break;
+        }
+      }
+      if(!traced && b>0.0){ v=normalize(v-normalize(cp)*(2.0/b)); }
+      if(traced && !hole){
+        // add the gentle bending that happens outside the traced sphere, so inner and outer zones join seamlessly
+        vec3 vn=normalize(v); vec3 pp=p-vn*dot(p,vn); float bb=length(pp);
+        if(bb>1.0){ float dout=(2.0/bb)*(1.0-sqrt(max(0.0,1.0-bb*bb/(R0*R0)))); v=normalize(vn-normalize(pp)*dout); }
+      }
+      vec3 col=vec3(0.0); float trans=1.0;
+      if(uDisk>0.0){
+        if(hits>0.5){ vec4 d=diskShade(h1q,h1v,N); col+=trans*d.rgb; trans*=1.0-d.a; }
+        if(hits>1.5){ vec4 d=diskShade(h2q,h2v,N); col+=trans*d.rgb; trans*=1.0-d.a; }
+        if(hits>2.5){ vec4 d=diskShade(h3q,h3v,N); col+=trans*d.rgb; trans*=1.0-d.a; }
+      }
+      vec3 sky= hole ? vec3(0.0) : skyAt(normalize(v));
+      col+=trans*sky;
+      col=col/(1.0+col*0.35);
+      if(uMono>0.5) col=vec3(dot(col,vec3(0.3,0.59,0.11)));
+      gl_FragColor=vec4(col,1.0);
+    }`;
+
+  // A star up close: boiling granulation, sunspots, limb darkening, and a corona with streamers
+  const STAR_FRAG = `precision highp float; varying vec2 vUv;
+    uniform vec3 uCol,uHot; uniform float uTime,uSeed,uPx,uScale,uCell,uMono,uSpots;
+    ${GLSL_NOISE}
+    vec3 rotY(vec3 p,float a){float c=cos(a),s=sin(a);return vec3(c*p.x+s*p.z,p.y,-s*p.x+c*p.z);}
+    void main(){
+      vec2 p=vUv*uScale; float r=length(p);
+      vec3 body=vec3(0.0); float a=0.0;
+      if(r<1.0){
+        float z=sqrt(1.0-r*r); vec3 n=vec3(p,z); vec3 q=rotY(n,uTime*0.01+uSeed);
+        float g1=fbm(q*uCell+vec3(0.0,0.0,uTime*0.05));
+        float cells=1.0-abs(snoise(q*uCell*2.2+vec3(uTime*0.04)));
+        float spots=smoothstep(0.42,0.6,fbm(q*2.2+uSeed*3.0))*uSpots;
+        float limb=pow(z,0.5);
+        body=mix(uCol,uHot,0.35+0.35*g1)*(0.8+0.35*cells)*limb*(1.0-spots*0.55);
+        body+=uHot*pow(z,3.0)*0.35;
+        a=smoothstep(1.0,1.0-uPx*uScale*1.5,r);
+      }
+      float h=max(r-1.0,0.0);
+      float ang=atan(p.y,p.x);
+      float rays=fbm(vec3(cos(ang)*2.5,sin(ang)*2.5,uTime*0.03+h*0.6))*0.5+0.5;
+      float corona=(exp(-h*5.0)*0.9+exp(-h*1.3)*0.28+exp(-h*0.35)*0.06)*(0.65+0.7*pow(rays,2.0));
+      vec3 cc=mix(uCol,uHot,0.5)*corona;
+      vec3 outc=body*a+cc*(1.0-a);
+      outc=outc/(1.0+outc*0.25);
+      if(uMono>0.5) outc=vec3(dot(outc,vec3(0.3,0.59,0.11)));
+      gl_FragColor=vec4(outc,clamp(max(outc.r,max(outc.g,outc.b)),0.0,1.0));
+    }`;
+
+  // A spiral galaxy seen at an angle: bulge, two arms, dust lanes, star-forming knots
+  const GALAXY_FRAG = `precision highp float; varying vec2 vUv;
+    uniform float uSeed,uMono,uRot,uTilt;
+    ${GLSL_NOISE}
+    void main(){
+      vec2 p=vUv; float c=cos(uRot), s=sin(uRot);
+      p=vec2(c*p.x-s*p.y, s*p.x+c*p.y); p.y/=uTilt;
+      float r=length(p)+1e-4; float ang=atan(p.y,p.x);
+      float sp=ang-log(r)*2.4;
+      float arm=pow(0.5+0.5*cos(2.0*sp),2.5);
+      float n=fbm(vec3(p*5.0,uSeed))*0.5+0.5;
+      float nf=fbm(vec3(p*18.0,uSeed+3.0))*0.5+0.5;
+      float disk=exp(-r*3.4);
+      float bulge=exp(-r*r*70.0)*1.8+exp(-r*11.0)*0.55;
+      float dust=smoothstep(0.5,0.85,0.5+0.5*cos(2.0*sp+0.8))*(0.55+0.6*n);
+      vec3 armCol=mix(vec3(0.62,0.72,1.0),vec3(1.0,0.88,0.72),smoothstep(0.45,0.0,r));
+      vec3 col=armCol*disk*(0.25+1.5*arm*(0.5+0.8*nf));
+      col*=1.0-dust*0.6*smoothstep(0.04,0.25,r);
+      col+=vec3(1.0,0.86,0.66)*bulge;
+      float knots=smoothstep(0.86,0.97,snoise(vec3(p*34.0,uSeed)))*arm*disk*2.4;
+      col+=vec3(1.0,0.42,0.6)*knots;
+      col+=vec3(0.75,0.85,1.0)*pow(max(snoise(vec3(p*90.0,uSeed+7.0)),0.0),12.0)*arm*disk*3.0;
+      col*=smoothstep(1.0,0.55,r);
+      if(uMono>0.5) col=vec3(dot(col,vec3(0.3,0.59,0.11)));
+      gl_FragColor=vec4(col,clamp(max(col.r,max(col.g,col.b)),0.0,1.0));
+    }`;
+
+  // Hyperspace tunnel
+  const TUNNEL_FRAG = `precision highp float; varying vec2 vUv;
+    uniform vec2 uRes,uVp; uniform float uTime,uK; uniform vec3 uC1,uC2;
+    ${GLSL_NOISE}
+    void main(){
+      vec2 px=(vUv*0.5+0.5)*uRes; px.y=uRes.y-px.y;
+      vec2 d=(px-uVp)/uRes.y; float r=length(d); float a=atan(d.y,d.x);
+      float depth=0.22/(r+0.015); float t=depth+uTime*4.0;
+      float streak=pow(0.5+0.5*snoise(vec3(cos(a)*5.0,sin(a)*5.0,t*0.35)),5.0)*1.8;
+      float rings=0.5+0.5*snoise(vec3(cos(a)*1.2,sin(a)*1.2,t*1.2));
+      vec3 col=mix(uC1,uC2,rings)*streak*smoothstep(0.0,0.3,r);
+      col+=mix(uC1,vec3(1.0),0.6)*exp(-r*7.0)*1.1;
+      col+=uC2*0.12*smoothstep(0.2,0.9,r);
+      col*=uK; gl_FragColor=vec4(col,clamp(max(col.r,max(col.g,col.b)),0.0,1.0));
+    }`;
+
   const GL = (() => {
     try {
       const canvas = document.createElement('canvas');
@@ -627,23 +835,57 @@ body.idle #space { cursor: none; }
       const buf = gl.createBuffer();
       gl.bindBuffer(gl.ARRAY_BUFFER, buf);
       gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([-1, -1, 1, -1, -1, 1, 1, 1]), gl.STATIC_DRAW);
-      function program(fsrc) {
-        const mk = (type, src) => {
-          const sh = gl.createShader(type); gl.shaderSource(sh, src); gl.compileShader(sh);
-          if (!gl.getShaderParameter(sh, gl.COMPILE_STATUS)) throw new Error(gl.getShaderInfoLog(sh));
-          return sh;
-        };
+      const ext = gl.getExtension('KHR_parallel_shader_compile');
+      function startProgram(fsrc) {
+        const mk = (type, src) => { const sh = gl.createShader(type); gl.shaderSource(sh, src); gl.compileShader(sh); return sh; };
+        const vs = mk(gl.VERTEX_SHADER, VERT), fs = mk(gl.FRAGMENT_SHADER, fsrc);
         const pr = gl.createProgram();
-        gl.attachShader(pr, mk(gl.VERTEX_SHADER, VERT)); gl.attachShader(pr, mk(gl.FRAGMENT_SHADER, fsrc));
-        gl.linkProgram(pr);
-        if (!gl.getProgramParameter(pr, gl.LINK_STATUS)) throw new Error(gl.getProgramInfoLog(pr));
-        const u = {}, n = gl.getProgramParameter(pr, gl.ACTIVE_UNIFORMS);
-        for (let i = 0; i < n; i++) { const name = gl.getActiveUniform(pr, i).name; u[name] = gl.getUniformLocation(pr, name); }
-        return { pr, u, a: gl.getAttribLocation(pr, 'aPos') };
+        gl.attachShader(pr, vs); gl.attachShader(pr, fs); gl.linkProgram(pr);
+        return { pr, vs, fs, state: 'pending' };
       }
-      const progs = { planet: program(PLANET_FRAG), neb: program(NEB_FRAG), sky: program(SKY_FRAG) };
+      function finalize(P) {
+        if (!gl.getProgramParameter(P.pr, gl.LINK_STATUS)) {
+          console.warn('Shader failed:', gl.getShaderInfoLog(P.fs) || gl.getProgramInfoLog(P.pr));
+          P.state = 'failed'; return;
+        }
+        P.u = {}; const n = gl.getProgramParameter(P.pr, gl.ACTIVE_UNIFORMS);
+        for (let i = 0; i < n; i++) { const name = gl.getActiveUniform(P.pr, i).name; P.u[name] = gl.getUniformLocation(P.pr, name); }
+        P.a = gl.getAttribLocation(P.pr, 'aPos'); P.state = 'ok';
+      }
+      function ready(P) {
+        if (!P) return false;
+        if (P.state !== 'pending') return P.state === 'ok';
+        if (ext && !gl.getProgramParameter(P.pr, ext.COMPLETION_STATUS_KHR)) return false;
+        finalize(P); return P.state === 'ok';
+      }
+      const progs = {};
+      // the everyday shaders are needed at once; the destination and jump shaders compile in the background
+      for (const [k, src] of [['planet', PLANET_FRAG], ['neb', NEB_FRAG], ['sky', SKY_FRAG]]) {
+        progs[k] = startProgram(src); finalize(progs[k]);
+        if (progs[k].state !== 'ok') throw new Error('core shader ' + k);
+      }
+      const later = [['tunnel', TUNNEL_FRAG], ['star', STAR_FRAG], ['galaxy', GALAXY_FRAG], ['bh', BH_FRAG]];
+      function compileLater() {
+        const next = later.shift(); if (!next) return;
+        progs[next[0]] = startProgram(next[1]);
+        if (!ext) ready(progs[next[0]]);
+        setTimeout(compileLater, ext ? 50 : 400);
+      }
+      setTimeout(compileLater, 1200);
+      const skyTex = gl.createTexture();
+      function setSky(img) {
+        gl.activeTexture(gl.TEXTURE0);
+        gl.bindTexture(gl.TEXTURE_2D, skyTex);
+        gl.pixelStorei(gl.UNPACK_PREMULTIPLY_ALPHA_WEBGL, false);
+        gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, img);
+        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
+        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
+        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+      }
       function run(name, w, h, uniforms) {
         const P = progs[name];
+        if (!ready(P)) return null;
         if (canvas.width !== w || canvas.height !== h) { canvas.width = w; canvas.height = h; }
         gl.viewport(0, 0, w, h);
         gl.useProgram(P.pr);
@@ -654,14 +896,15 @@ body.idle #space { cursor: none; }
           const loc = P.u[k]; if (!loc) continue;
           const v = uniforms[k];
           if (k === 'uType') gl.uniform1i(loc, v);
-          else if (Array.isArray(v)) gl.uniform3fv(loc, v);
+          else if (k === 'uSky') { gl.activeTexture(gl.TEXTURE0); gl.bindTexture(gl.TEXTURE_2D, skyTex); gl.uniform1i(loc, 0); }
+          else if (Array.isArray(v)) (v.length === 2 ? gl.uniform2fv : gl.uniform3fv).call(gl, loc, v);
           else gl.uniform1f(loc, v);
         }
         gl.clearColor(0, 0, 0, 0); gl.clear(gl.COLOR_BUFFER_BIT);
         gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
         return canvas;
       }
-      return { canvas, run };
+      return { canvas, run, setSky };
     } catch (err) {
       console.warn('Realistic rendering unavailable, using simple mode:', err && err.message);
       return null;
@@ -678,7 +921,7 @@ body.idle #space { cursor: none; }
     { type: 4, c1: [0.30, 0.29, 0.28], c2: [0.62, 0.60, 0.58], c3: [0.44, 0.43, 0.42], atmo: [0, 0, 0], atmoStr: 0, storm: 0 }
   ];
   const SUN = [-0.55, 0.42, 0.72];
-  let planetCap = matchMedia('(pointer: coarse)').matches ? 512 : 1024;
+  let planetCap = matchMedia('(pointer: coarse)').matches ? 1024 : 2048;
 
   function drawRealPlanet(p, k, px, py, R, alpha, now) {
     if (R < 0.8 || alpha <= 0) return;
@@ -786,6 +1029,7 @@ body.idle #space { cursor: none; }
     frameGrad.addColorStop(0, TH.frame[0]); frameGrad.addColorStop(0.5, TH.frame[1]); frameGrad.addColorStop(1, TH.frame[2]);
   }
   function buildBand() {
+    skyDirty = true;
     bandCanvas = document.createElement('canvas');
     bandCanvas.width = W; bandCanvas.height = H;
     const b = bandCanvas.getContext('2d');
@@ -840,7 +1084,7 @@ body.idle #space { cursor: none; }
     themeBtn.setAttribute('aria-expanded', String(open));
     if (open) (panel.querySelector('[aria-checked="true"]') || panel.querySelector('.theme-card')).focus();
   }
-  themeBtn.addEventListener('click', e => { e.stopPropagation(); openPanel(panel.hidden); });
+  themeBtn.addEventListener('click', e => { e.stopPropagation(); if (typeof openDest === 'function' && !destPanel.hidden) openDest(false); openPanel(panel.hidden); });
   panel.addEventListener('click', e => {
     e.stopPropagation();
     const card = e.target.closest('.theme-card');
@@ -862,6 +1106,7 @@ body.idle #space { cursor: none; }
   document.querySelectorAll('.presets button').forEach(b => b.addEventListener('click', () => setTarget(+b.dataset.t)));
   addEventListener('keydown', e => {
     if (e.key === 'Escape' && !panel.hidden) { openPanel(false); themeBtn.focus(); return; }
+    if (e.key === 'Escape' && !destPanel.hidden) { openDest(false); destBtn.focus(); return; }
     if (e.target === slider && e.key.startsWith('Arrow')) return;
     const k = e.key.toLowerCase();
     if (k === 'arrowup' || k === 'w') { setTarget(target + 0.03); e.preventDefault(); }
@@ -873,6 +1118,7 @@ body.idle #space { cursor: none; }
     else if (k === 'h') setZen(!zen);
     else if (k === 'f') toggleFullscreen();
     else if (k === 'c') setCockpit(!cockpit);
+    else if (k === 'j') { if (!panel.hidden) openPanel(false); openDest(destPanel.hidden); }
     else if (k === ' ' && e.target.tagName !== 'BUTTON') { setTarget(0); e.preventDefault(); }
     wake();
   });
@@ -916,7 +1162,7 @@ body.idle #space { cursor: none; }
     document.body.classList.toggle('zen', on);
     $('zenBtn').setAttribute('aria-pressed', String(on));
     $('zenBtn').setAttribute('aria-label', on ? 'Show controls' : 'Hide controls');
-    if (on) { openPanel(false); toast('Controls hidden · press H or double-tap to bring them back'); }
+    if (on) { openPanel(false); openDest(false); toast('Controls hidden · press H or double-tap to bring them back'); }
     wake();
   }
   $('zenBtn').addEventListener('click', () => setZen(!zen));
@@ -952,11 +1198,12 @@ body.idle #space { cursor: none; }
     const url = new URL(location.href.split('?')[0].split('#')[0]);
     url.searchParams.set('theme', themeId);
     url.searchParams.set('speed', String(Math.round(target * 100)));
-    const text = `Flying through space at ${fmtC(speedC(target))}c in Deep Field Cruiser`;
+    if (here !== DESTS[0]) url.searchParams.set('at', here.id);
+    const text = here !== DESTS[0] ? `I'm at ${here.name}, ${fmtLy(here.ly)} from Earth. Come fly with me in Deep Field Cruiser` : `Flying through space at ${fmtC(speedC(target))}c in Deep Field Cruiser`;
     try {
       if (navigator.share) { await navigator.share({ title: 'Deep Field Cruiser', text, url: url.href }); return; }
     } catch (err) { if (err && err.name === 'AbortError') return; }
-    try { await navigator.clipboard.writeText(url.href); toast('Link copied · it opens this theme at this speed'); }
+    try { await navigator.clipboard.writeText(url.href); toast(here !== DESTS[0] ? `Link copied · it opens at ${here.name}` : 'Link copied · it opens this theme at this speed'); }
     catch (err) { toast(url.href); }
   });
 
@@ -995,28 +1242,382 @@ body.idle #space { cursor: none; }
     } catch (err) { toast('This browser does not share motion data'); }
   });
 
-  // ---------- sound ----------
+  // ---------- destinations ----------
+  // Real objects with real sky positions (RA hours, Dec degrees) and distances, so jumps between them use true distances.
+  const DESTS = [
+    { id: 'sun', name: 'Solar System', short: 'Home', kind: 'star', type: 'Our home star, a yellow dwarf', ra: 0, dec: 0, ly: 0, planets: true,
+      star: { col: [1.0, 0.6, 0.2], hot: [1.0, 0.93, 0.74], r: 0.42, cell: 8, scale: 3.4, spots: 0.6 },
+      fact: 'The Sun is about 4.6 billion years old. Its light takes about 8 minutes and 20 seconds to reach Earth.' },
+    { id: 'proxima', name: 'Proxima Centauri', short: 'Proxima', kind: 'star', type: 'Red dwarf star', ra: 14.495, dec: -62.68, ly: 4.2465, planets: true,
+      star: { col: [0.95, 0.3, 0.1], hot: [1.0, 0.6, 0.32], r: 0.26, cell: 7, scale: 3.6 },
+      fact: 'The closest star to the Sun. A small, cool red dwarf with about an eighth of the Sun’s mass. At least one planet, Proxima b, orbits in its habitable zone.' },
+    { id: 'sirius', name: 'Sirius', short: 'Sirius', kind: 'star', type: 'Brightest star in Earth’s night sky', ra: 6.752, dec: -16.72, ly: 8.6, companion: true,
+      star: { col: [0.6, 0.74, 1.0], hot: [0.94, 0.97, 1.0], r: 0.36, cell: 5, scale: 3.8, spots: 0 },
+      fact: 'Sirius is about twice the Sun’s mass. Its faint companion, Sirius B, is a white dwarf about the size of Earth. Look for it just beside the main star.' },
+    { id: 'betelgeuse', name: 'Betelgeuse', short: 'Betelgeuse', kind: 'star', type: 'Red supergiant in Orion', ra: 5.919, dec: 7.41, ly: 550, distNote: 'about 550 ly (estimates vary)',
+      star: { col: [0.88, 0.26, 0.06], hot: [1.0, 0.58, 0.28], r: 1.5, cell: 2.8, scale: 2.6, spots: 0.35 },
+      fact: 'Put where the Sun is, Betelgeuse would reach past the orbit of Mars. It is expected to explode as a supernova, probably within the next 100,000 years.' },
+    { id: 'orion', name: 'Orion Nebula', short: 'Orion Nebula', kind: 'nebula', type: 'Stellar nursery', ra: 5.588, dec: -5.39, ly: 1344,
+      fact: 'New stars are forming here right now. The four bright young stars at its heart are called the Trapezium. From Earth you can see the nebula with the naked eye, just below Orion’s belt.' },
+    { id: 'sgra', name: 'Sagittarius A*', short: 'Sgr A*', kind: 'blackhole', type: 'Supermassive black hole', ra: 17.761, dec: -29.0, ly: 26000,
+      fact: 'The black hole at the centre of our galaxy, about 4 million times the Sun’s mass. Light bends around it, which is why the stars behind look stretched. Its first image was released in 2022.' },
+    { id: 'andromeda', name: 'Andromeda Galaxy', short: 'Andromeda', kind: 'galaxy', type: 'Nearest large galaxy', ra: 0.712, dec: 41.27, ly: 2.5e6,
+      fact: 'About a trillion stars. The light reaching you here left it around 2.5 million years ago, before modern humans existed.' }
+  ];
+  DESTS.forEach(d => {
+    const a = d.ra * 15 * Math.PI / 180, b = d.dec * Math.PI / 180;
+    d.pos = [d.ly * Math.cos(b) * Math.cos(a), d.ly * Math.cos(b) * Math.sin(a), d.ly * Math.sin(b)];
+  });
+  const distLy = (a, b) => Math.hypot(a.pos[0] - b.pos[0], a.pos[1] - b.pos[1], a.pos[2] - b.pos[2]);
+  const fmtLy = ly => ly >= 1e6 ? (ly / 1e6).toFixed(1) + ' million ly' : ly >= 100 ? Math.round(ly).toLocaleString('en-US') + ' ly' : ly.toFixed(ly < 10 ? 2 : 1) + ' ly';
+
+  let here = DESTS[0];
+  try { const h = DESTS.find(d => d.id === localStorage.getItem('dfc-here')); if (h) here = h; } catch (e) {}
+  let obj = null;          // the destination object in view
+  let jump = null;         // the hyperspace jump in progress
+  let tunnelK = 0, bhScale = matchMedia('(pointer: coarse)').matches ? 0.55 : 0.8;
+  const JUMP_CHARGE = 3, JUMP_TUNNEL = 3.6, JUMP_FLASH = 0.8;
+
+  function spawnArrival(d) {
+    const st = d.star;
+    if (d.kind === 'star') obj = { d, z: 9, x: (st.r * 0.35 + 0.08), y: -0.04, r: st.r };
+    else if (d.kind === 'blackhole') obj = { d, z: 11, x: 0.0, y: 0.0, rs: 0.045 };
+    else if (d.kind === 'galaxy') obj = { d, z: 7.5, x: 0.05, y: -0.05, r: 2.8 };
+    else if (d.kind === 'nebula') {
+      obj = { d, z: 8, x: 0.05, y: 0.02, r: 0.5 };
+      nebs.length = 0;
+      for (let i = 0; i < 11; i++) nebs.push({
+        x: (Math.random() * 2 - 1) * 1.4, y: (Math.random() * 2 - 1) * 1.0, z: 2.5 + Math.random() * 9,
+        r: 1.6 + Math.random() * 2.4, ci: [0, 1, 2, 6, 0, 3, 7, 1][i % 8], a: 0.5 + Math.random() * 0.15, keep: true
+      });
+    }
+    if (d.kind !== 'nebula') { nebs.length = 0; for (let i = 0; i < 7; i++) nebs.push(newNeb(false)); }
+  }
+  function arrivalRate(o, vel) {
+    const k = o.d.kind;
+    if (k === 'galaxy') return 0.006 + vel * 0.05;
+    if (k === 'blackhole') return 0.016 + vel * 0.25;
+    return 0.03 + vel * 0.35;
+  }
+  function updateArrival(vel, dt) {
+    if (!obj) return;
+    obj.z -= arrivalRate(obj, vel) * obj.z * dt;
+    const k = obj.d.kind;
+    if (k === 'blackhole' && obj.z < 0.62) obj.z = 0.62;
+    if (k === 'galaxy' && obj.z < 1.3) obj.z = 1.3;
+    if ((k === 'star' || k === 'nebula') && obj.z < 0.22) obj = null;
+  }
+
+  function drawArrival(now) {
+    if (!obj || obj.d.kind === 'blackhole') return;
+    const real = GL && TH.style === 'real';
+    const o = obj, d = o.d;
+    const px = vpx + (o.x / o.z) * F, py = vpy + (o.y / o.z) * F;
+    const fadeIn = Math.min(1, (12 - o.z) / 3);
+    if (d.kind === 'star') {
+      const st = d.star, R = (st.r / o.z) * F;
+      const half = R * st.scale;
+      if (px + half < 0 || px - half > W || py + half < 0 || py - half > H) return;
+      if (real) {
+        const S = Math.min(planetCap, Math.max(64, 2 ** Math.ceil(Math.log2(half * 2))));
+        const img = GL.run('star', S, S, { uCol: st.col, uHot: st.hot, uTime: now / 1000, uSeed: d.ly % 7, uPx: 2 / S, uScale: st.scale, uCell: st.cell, uMono: TH.mono ? 1 : 0, uSpots: st.spots == null ? 1 : st.spots });
+        if (!img) { flatStar(px, py, R, st, fadeIn); return; }
+        ctx.save(); ctx.globalCompositeOperation = 'lighter'; ctx.globalAlpha = fadeIn;
+        ctx.drawImage(img, px - half, py - half, half * 2, half * 2);
+        // anamorphic streak, like a camera looking at something this bright
+        const sw = Math.min(W * 1.2, R * 14 + W * 0.3), hc = TH.mono ? '255,255,255' : st.hot.map(v => Math.round(v * 255)).join(',');
+        const lg = ctx.createLinearGradient(px - sw, 0, px + sw, 0);
+        lg.addColorStop(0, `rgba(${hc},0)`); lg.addColorStop(0.5, `rgba(${hc},.35)`); lg.addColorStop(1, `rgba(${hc},0)`);
+        ctx.fillStyle = lg; ctx.fillRect(px - sw, py - Math.max(1, R * 0.02) * DPR, sw * 2, Math.max(2, R * 0.04) * DPR);
+        if (d.companion) {
+          const cs = Math.max(6 * DPR, R * 0.9);
+          ctx.globalAlpha = fadeIn * 0.95;
+          ctx.drawImage(starGlow, px + R * 2.4 - cs / 2, py - R * 0.9 - cs / 2, cs, cs);
+        }
+        ctx.restore();
+      } else {
+        flatStar(px, py, R, st, fadeIn);
+      }
+    } else if (d.kind === 'galaxy') {
+      const R = (o.r / o.z) * F;
+      if (real) {
+        const S = Math.min(planetCap, Math.max(128, 2 ** Math.ceil(Math.log2(R * 2))));
+        const img = GL.run('galaxy', S, S, { uSeed: 2.3, uMono: TH.mono ? 1 : 0, uRot: 0.62, uTilt: 0.32 });
+        if (!img) { flatGalaxy(px, py, R, fadeIn); return; }
+        ctx.save(); ctx.globalCompositeOperation = 'lighter'; ctx.globalAlpha = fadeIn;
+        ctx.drawImage(img, px - R, py - R, R * 2, R * 2);
+        ctx.restore();
+      } else flatGalaxy(px, py, R, fadeIn);
+    } else if (d.kind === 'nebula') {
+      // the Trapezium: four hot young stars at the heart of the nebula
+      const R = (o.r / o.z) * F;
+      const pts = [[-0.3, -0.25, 1], [0.35, -0.15, 0.85], [-0.1, 0.32, 0.75], [0.28, 0.3, 0.6]];
+      ctx.save(); ctx.globalCompositeOperation = 'lighter';
+      for (const [dx, dy, b] of pts) {
+        const s2 = Math.max(14 * DPR, R * 1.3 * b);
+        ctx.globalAlpha = fadeIn * b;
+        ctx.drawImage(starGlow, px + dx * R - s2 / 2, py + dy * R - s2 / 2, s2, s2);
+      }
+      ctx.restore();
+    }
+  }
+  function themeRGB(i) { return TH.style === 'toon' ? ['255,216,77', '255,107,154', '255,250,240'][i] : TH.style === 'neon' ? ['255,92,225', '92,246,255', '255,255,255'][i] : ['255,170,90', '255,230,190', '255,255,255'][i]; }
+  function flatStar(px, py, R, st, a) {
+    ctx.save(); ctx.globalAlpha = a;
+    const c1 = TH.mono ? '255,255,255' : TH.style === 'real' ? st.col.map(v => Math.round(v * 255)).join(',') : themeRGB(0);
+    const g = ctx.createRadialGradient(px, py, R * 0.9, px, py, R * 3);
+    g.addColorStop(0, `rgba(${c1},.55)`); g.addColorStop(1, `rgba(${c1},0)`);
+    ctx.globalCompositeOperation = 'lighter'; ctx.fillStyle = g; ctx.fillRect(px - R * 3, py - R * 3, R * 6, R * 6);
+    ctx.globalCompositeOperation = 'source-over';
+    ctx.fillStyle = TH.style === 'neon' ? '#0a0216' : `rgb(${c1})`;
+    ctx.beginPath(); ctx.arc(px, py, R, 0, Math.PI * 2); ctx.fill();
+    ctx.lineWidth = Math.max(2 * DPR, R * 0.05);
+    ctx.strokeStyle = TH.style === 'toon' ? '#0b0820' : `rgb(${c1})`;
+    if (TH.style !== 'real') ctx.stroke();
+    ctx.restore();
+  }
+  function flatGalaxy(px, py, R, a) {
+    ctx.save(); ctx.globalAlpha = a; ctx.globalCompositeOperation = 'lighter';
+    ctx.translate(px, py); ctx.rotate(0.62); ctx.scale(1, 0.34);
+    const c = themeRGB(1), c2 = themeRGB(0);
+    const g = ctx.createRadialGradient(0, 0, 0, 0, 0, R);
+    g.addColorStop(0, `rgba(${themeRGB(2)},.9)`); g.addColorStop(0.15, `rgba(${c},.5)`); g.addColorStop(0.6, `rgba(${c2},.18)`); g.addColorStop(1, `rgba(${c2},0)`);
+    ctx.fillStyle = g; ctx.beginPath(); ctx.arc(0, 0, R, 0, Math.PI * 2); ctx.fill();
+    ctx.strokeStyle = `rgba(${c2},.35)`; ctx.lineWidth = R * 0.06;
+    for (let arm = 0; arm < 2; arm++) {
+      ctx.beginPath();
+      for (let t = 0; t < 1; t += 0.02) {
+        const ang = arm * Math.PI + t * 5.5, rr = R * (0.12 + t * 0.8);
+        const x = Math.cos(ang) * rr, y = Math.sin(ang) * rr;
+        t === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
+      }
+      ctx.stroke();
+    }
+    ctx.restore();
+  }
+  // Black hole: full-screen lensing pass replaces the background while it is in view
+  let skyDirty = true;
+  function drawBlackHole(now) {
+    if (!obj || obj.d.kind !== 'blackhole') return false;
+    const rsPx = (obj.rs / obj.z) * F;
+    if (GL && TH.style === 'real') {
+      if (skyDirty) { GL.setSky(bandCanvas); skyDirty = false; }
+      const w = Math.round(W * bhScale), h = Math.round(H * bhScale);
+      const img = GL.run('bh', w, h, {
+        uSky: 0, uRes: [W, H], uVp: [vpx, vpy], uSkyOff: [-steerX * 14 * DPR, -steerY * 10 * DPR],
+        uBH: [obj.x / obj.rs, -obj.y / obj.rs, obj.z / obj.rs], uF: F, uTime: now / 1000, uMono: TH.mono ? 1 : 0, uDisk: Math.min(1, (13 - obj.z) / 4)
+      });
+      if (!img) return false;
+      ctx.globalAlpha = 1;
+      ctx.drawImage(img, 0, 0, W, H);
+      return true;
+    }
+    return false;
+  }
+  function drawBlackHoleFlat() {
+    if (!obj || obj.d.kind !== 'blackhole') return;
+    const rsPx = (obj.rs / obj.z) * F;
+    const px = vpx + (obj.x / obj.z) * F, py = vpy + (obj.y / obj.z) * F;
+    // stylised themes (and the moment before the ray tracer is ready): a dark disc with a glowing tilted ring
+    ctx.save();
+    const c = themeRGB(0), c2 = themeRGB(1);
+    ctx.translate(px, py);
+    ctx.save(); ctx.scale(1, 0.22); ctx.lineWidth = rsPx * 3;
+    ctx.strokeStyle = `rgba(${c},.9)`; ctx.beginPath(); ctx.arc(0, 0, rsPx * 6, Math.PI, Math.PI * 2); ctx.stroke(); ctx.restore();
+    const g = ctx.createRadialGradient(0, 0, rsPx * 2.4, 0, 0, rsPx * 4.5);
+    g.addColorStop(0, `rgba(${c2},.9)`); g.addColorStop(1, `rgba(${c2},0)`);
+    ctx.globalCompositeOperation = 'lighter'; ctx.fillStyle = g; ctx.beginPath(); ctx.arc(0, 0, rsPx * 4.5, 0, Math.PI * 2); ctx.fill();
+    ctx.globalCompositeOperation = 'source-over';
+    ctx.fillStyle = '#000'; ctx.beginPath(); ctx.arc(0, 0, rsPx * 2.6, 0, Math.PI * 2); ctx.fill();
+    if (TH.style === 'toon') { ctx.lineWidth = 3 * DPR; ctx.strokeStyle = '#0b0820'; ctx.stroke(); }
+    ctx.save(); ctx.scale(1, 0.22); ctx.lineWidth = rsPx * 3;
+    ctx.strokeStyle = `rgba(${c},.95)`; ctx.beginPath(); ctx.arc(0, 0, rsPx * 6, 0, Math.PI); ctx.stroke(); ctx.restore();
+    ctx.restore();
+  }
+
+  // ---------- jump sequence ----------
+  function startJump(d) {
+    if (jump) return;
+    if (d === here && obj) { toast(`You are already at ${d.name}`); return; }
+    openDest(false); if (!panel.hidden) openPanel(false);
+    jump = { d, t: 0, arrived: false, from: here };
+    $('jumpTo').textContent = d.name;
+    $('countdown').hidden = false;
+    sfx('charge');
+  }
+  function updateJump(dt) {
+    if (!jump) { tunnelK = 0; return null; }
+    jump.t += dt;
+    const t = jump.t;
+    if (t < JUMP_CHARGE) {
+      $('countNum').textContent = String(3 - Math.floor(t));
+      setTarget(Math.max(target, 0.35 + 0.6 * (t / JUMP_CHARGE)));
+      return { stage: 'charge', k: t / JUMP_CHARGE };
+    }
+    $('countdown').hidden = true;
+    const tt = t - JUMP_CHARGE;
+    if (tt < JUMP_TUNNEL) {
+      if (!jump.boomed) { jump.boomed = true; sfx('enter'); }
+      tunnelK = Math.min(1, tt / 0.45) * (1 - Math.max(0, (tt - (JUMP_TUNNEL - 0.35)) / 0.35));
+      if (!jump.arrived && tt > JUMP_TUNNEL - 0.12) arrive();
+      return { stage: 'tunnel', k: tunnelK };
+    }
+    if (!jump.arrived) arrive();
+    tunnelK = 0;
+    const ft = tt - JUMP_TUNNEL;
+    if (ft < JUMP_FLASH) return { stage: 'flash', k: 1 - ft / JUMP_FLASH };
+    const d = jump.d; jump = null;
+    showFact(d);
+    return null;
+  }
+  function arrive() {
+    const d = jump.d;
+    jump.arrived = true;
+    travelledAU += distLy(jump.from, d) * LY_AU;
+    here = d;
+    try { localStorage.setItem('dfc-here', d.id); } catch (e) {}
+    planet = null; nextPlanetAt = travel + 25;
+    spawnArrival(d);
+    cur = 0.55; setTarget(0.12);
+    sfx('boom');
+    renderDestList();
+  }
+
+  // ---------- destination panel + fact card ----------
+  const destPanel = $('destPanel'), destBtn = $('destBtn');
+  function renderDestList() {
+    const list = $('destList'); list.textContent = '';
+    for (const d of DESTS) {
+      const b = document.createElement('button');
+      b.type = 'button'; b.className = 'dest-row' + (d === here ? ' here' : '');
+      const dist = d === here ? 'You are here' : fmtLy(distLy(here, d)) + ' away';
+      b.innerHTML = `<span class="dn"></span><span class="dt"></span><span class="dd"></span>`;
+      b.querySelector('.dn').textContent = d.name;
+      b.querySelector('.dt').textContent = d.type;
+      b.querySelector('.dd').textContent = dist;
+      b.addEventListener('click', e => { e.stopPropagation(); startJump(d); });
+      list.appendChild(b);
+    }
+    $('locName').textContent = innerWidth < 760 ? (here === DESTS[0] ? 'Solar System' : here.short) : here.name;
+    $('destLabel').textContent = here === DESTS[0] ? ' · near the Sun' : ' · near ' + here.name;
+  }
+  function openDest(open) {
+    destPanel.hidden = !open;
+    destBtn.setAttribute('aria-expanded', String(open));
+    if (open) { renderDestList(); const f = destPanel.querySelector('.dest-row:not(.here)'); if (f) f.focus(); }
+  }
+  destBtn.addEventListener('click', e => { e.stopPropagation(); if (!panel.hidden) openPanel(false); openDest(destPanel.hidden); });
+  destPanel.addEventListener('click', e => e.stopPropagation());
+  document.addEventListener('click', () => { if (!destPanel.hidden) openDest(false); });
+  let factTimer = 0;
+  function showFact(d) {
+    $('factName').textContent = d.name;
+    $('factType').textContent = d.type + ' · ' + (d.distNote || (d.ly ? fmtLy(d.ly) + ' from Earth' : 'home'));
+    $('factText').textContent = d.fact;
+    $('fact').hidden = false;
+    sfx('arrive');
+    clearTimeout(factTimer); factTimer = setTimeout(() => { $('fact').hidden = true; }, 16000);
+  }
+  $('factClose').addEventListener('click', () => { $('fact').hidden = true; });
+  $('factNext').addEventListener('click', e => { e.stopPropagation(); $('fact').hidden = true; openDest(true); });
+
+  // ---------- sound design (all synthesized, no files) ----------
   let audio = null;
+  function initAudio() {
+    const ac = new (window.AudioContext || window.webkitAudioContext)();
+    const master = ac.createGain(); master.gain.value = 0;
+    const comp = ac.createDynamicsCompressor(); master.connect(comp); comp.connect(ac.destination);
+    const sr = ac.sampleRate;
+    const mkBuf = (brown) => {
+      const len = sr * 3, b = ac.createBuffer(1, len, sr), ch = b.getChannelData(0); let l = 0;
+      for (let i = 0; i < len; i++) { const w = Math.random() * 2 - 1; if (brown) { l = (l + 0.02 * w) / 1.02; ch[i] = l * 3.5; } else ch[i] = w; }
+      return b;
+    };
+    const brown = mkBuf(true), white = mkBuf(false);
+    // engine rumble: brown noise + low hum
+    const ns = ac.createBufferSource(); ns.buffer = brown; ns.loop = true;
+    const nlp = ac.createBiquadFilter(); nlp.type = 'lowpass'; nlp.frequency.value = 180;
+    const ng = ac.createGain(); ng.gain.value = 0.3;
+    ns.connect(nlp); nlp.connect(ng); ng.connect(master); ns.start();
+    const lp = ac.createBiquadFilter(); lp.type = 'lowpass'; lp.frequency.value = 260; lp.Q.value = 3;
+    const hg = ac.createGain(); hg.gain.value = 0.22;
+    const o1 = ac.createOscillator(); o1.type = 'sawtooth'; o1.frequency.value = 42;
+    const o2 = ac.createOscillator(); o2.type = 'sine'; o2.frequency.value = 84;
+    o1.connect(lp); o2.connect(lp); lp.connect(hg); hg.connect(master); o1.start(); o2.start();
+    // ambient pad: a slow, airy chord
+    const pad = ac.createGain(); pad.gain.value = 0.05;
+    const plp = ac.createBiquadFilter(); plp.type = 'lowpass'; plp.frequency.value = 900;
+    plp.connect(pad); pad.connect(master);
+    [110, 164.81, 220, 329.63, 493.88].forEach((f, i) => {
+      for (const det of [-4, 4]) {
+        const o = ac.createOscillator(); o.type = i < 2 ? 'sine' : 'triangle'; o.frequency.value = f; o.detune.value = det;
+        const g = ac.createGain(); g.gain.value = 0.18 / (i + 1);
+        const lfo = ac.createOscillator(); lfo.frequency.value = 0.05 + i * 0.023;
+        const lg = ac.createGain(); lg.gain.value = 0.08 / (i + 1);
+        lfo.connect(lg); lg.connect(g.gain); lfo.start();
+        o.connect(g); g.connect(plp); o.start();
+      }
+    });
+    audio = { ac, master, nlp, ng, lp, o1, o2, white, brown, on: false };
+  }
+  function sfx(kind, pan = 0) {
+    if (!audio || !audio.on) return;
+    const { ac, master, white } = audio, t = ac.currentTime;
+    const env = (g, a, peak, d) => { g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(peak, t + a); g.gain.exponentialRampToValueAtTime(0.0001, t + a + d); };
+    const noise = () => { const s = ac.createBufferSource(); s.buffer = white; s.loop = true; s.start(t); s.stop(t + 6); return s; };
+    if (kind === 'whoosh') {
+      const s = noise(), bp = ac.createBiquadFilter(), g = ac.createGain();
+      bp.type = 'bandpass'; bp.Q.value = 1.4;
+      bp.frequency.setValueAtTime(300, t); bp.frequency.exponentialRampToValueAtTime(2600, t + 0.7); bp.frequency.exponentialRampToValueAtTime(350, t + 1.6);
+      env(g, 0.6, 0.35, 1.0);
+      const pn = ac.createStereoPanner ? ac.createStereoPanner() : null;
+      s.connect(bp); bp.connect(g);
+      if (pn) { pn.pan.setValueAtTime(-pan, t); pn.pan.linearRampToValueAtTime(pan, t + 1.6); g.connect(pn); pn.connect(master); } else g.connect(master);
+    } else if (kind === 'charge') {
+      const o = ac.createOscillator(), g = ac.createGain(), f = ac.createBiquadFilter();
+      o.type = 'sawtooth'; o.frequency.setValueAtTime(55, t); o.frequency.exponentialRampToValueAtTime(880, t + JUMP_CHARGE);
+      f.type = 'lowpass'; f.frequency.setValueAtTime(200, t); f.frequency.exponentialRampToValueAtTime(4000, t + JUMP_CHARGE);
+      g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(0.16, t + JUMP_CHARGE); g.gain.exponentialRampToValueAtTime(0.0001, t + JUMP_CHARGE + 0.25);
+      o.connect(f); f.connect(g); g.connect(master); o.start(t); o.stop(t + JUMP_CHARGE + 0.3);
+      for (let i = 0; i < 3; i++) {
+        const b = ac.createOscillator(), bg = ac.createGain(); b.type = 'sine'; b.frequency.value = 440 + i * 110;
+        const tt = t + i; bg.gain.setValueAtTime(0.0001, tt); bg.gain.exponentialRampToValueAtTime(0.12, tt + 0.01); bg.gain.exponentialRampToValueAtTime(0.0001, tt + 0.35);
+        b.connect(bg); bg.connect(master); b.start(tt); b.stop(tt + 0.4);
+      }
+    } else if (kind === 'enter' || kind === 'boom') {
+      const o = ac.createOscillator(), g = ac.createGain();
+      o.type = 'sine'; o.frequency.setValueAtTime(kind === 'enter' ? 120 : 90, t); o.frequency.exponentialRampToValueAtTime(28, t + 1.4);
+      env(g, 0.02, 0.5, 1.5); o.connect(g); g.connect(master); o.start(t); o.stop(t + 1.7);
+      const s = noise(), f = ac.createBiquadFilter(), ng2 = ac.createGain();
+      f.type = 'lowpass'; f.frequency.setValueAtTime(2500, t); f.frequency.exponentialRampToValueAtTime(80, t + 1.5);
+      env(ng2, 0.01, 0.4, 1.5); s.connect(f); f.connect(ng2); ng2.connect(master);
+    } else if (kind === 'arrive') {
+      [523.25, 783.99, 1046.5].forEach((fr, i) => {
+        const o = ac.createOscillator(), g = ac.createGain(); o.type = 'sine'; o.frequency.value = fr;
+        const tt = t + i * 0.12; g.gain.setValueAtTime(0.0001, tt); g.gain.exponentialRampToValueAtTime(0.07, tt + 0.03); g.gain.exponentialRampToValueAtTime(0.0001, tt + 2.6);
+        o.connect(g); g.connect(master); o.start(tt); o.stop(tt + 2.7);
+      });
+    }
+  }
   $('sound').addEventListener('click', async () => {
     const btn = $('sound');
-    if (!audio) {
-      try {
-        const ac = new (window.AudioContext || window.webkitAudioContext)();
-        const gain = ac.createGain(); gain.gain.value = 0;
-        const lp = ac.createBiquadFilter(); lp.type = 'lowpass'; lp.frequency.value = 300; lp.Q.value = 4;
-        const o1 = ac.createOscillator(); o1.type = 'sawtooth'; o1.frequency.value = 42;
-        const o2 = ac.createOscillator(); o2.type = 'sine'; o2.frequency.value = 84;
-        o1.connect(lp); o2.connect(lp); lp.connect(gain); gain.connect(ac.destination);
-        o1.start(); o2.start();
-        audio = { ac, gain, lp, o1, o2, on: false };
-      } catch (err) { btn.textContent = 'Sound unavailable'; return; }
-    }
+    if (!audio) { try { initAudio(); } catch (err) { btn.textContent = 'Sound unavailable'; return; } }
     audio.on = !audio.on;
     if (audio.ac.state === 'suspended') await audio.ac.resume();
-    audio.gain.gain.setTargetAtTime(audio.on ? 0.06 : 0, audio.ac.currentTime, 0.2);
+    audio.master.gain.setTargetAtTime(audio.on ? 0.55 : 0, audio.ac.currentTime, 0.3);
     btn.setAttribute('aria-pressed', String(audio.on));
     btn.textContent = 'Sound: ' + (audio.on ? 'on' : 'off');
+    if (audio.on) toast('Sound on · headphones recommended');
   });
+  function updateAudio(stage) {
+    if (!audio || !audio.on) return;
+    const t = audio.ac.currentTime, tk = tunnelK;
+    audio.o1.frequency.setTargetAtTime(38 + cur * 70 + tk * 30, t, 0.15);
+    audio.o2.frequency.setTargetAtTime(76 + cur * 160 + tk * 60, t, 0.15);
+    audio.lp.frequency.setTargetAtTime(220 + cur * 1600 + tk * 1500, t, 0.15);
+    audio.nlp.frequency.setTargetAtTime(140 + cur * 700 + tk * 3500, t, 0.2);
+    audio.ng.gain.setTargetAtTime(0.18 + cur * 0.5 + tk * 0.9, t, 0.2);
+  }
 
   // ---------- readouts ----------
   const speedC = t => t < 0.002 ? 0 : 0.01 * Math.pow(10, 5 * t);
@@ -1037,13 +1638,11 @@ body.idle #space { cursor: none; }
     $('vC').textContent = fmtC(c);
     $('vKm').textContent = Math.round(c * 299792.458).toLocaleString('en-US');
     const m = $('mode');
-    const mode = c < 0.05 ? 'Drift' : c < 0.5 ? 'Cruise' : c < 1 ? 'Relativistic' : 'Warp drive';
+    const mode = tunnelK > 0 ? 'Hyperspace' : c < 0.05 ? 'Drift' : c < 0.5 ? 'Cruise' : c < 1 ? 'Relativistic' : 'Warp drive';
     m.textContent = mode; m.classList.toggle('warp', c >= 1);
     $('dist').textContent = travelledAU < LY_AU * 0.05
       ? travelledAU.toLocaleString('en-US', { maximumFractionDigits: travelledAU < 100 ? 2 : 0 }) + ' AU'
       : (travelledAU / LY_AU).toFixed(3) + ' ly';
-    const rem = PROXIMA_AU - travelledAU;
-    $('eta').textContent = rem <= 0 ? 'Arrived' : c === 0 ? 'Holding' : fmtDur(rem / (c * AU_PER_LS));
     if (c < 1) { $('gLabel').textContent = 'Time dilation'; $('gamma').textContent = 'γ ' + (1 / Math.sqrt(1 - Math.min(c, 0.9999) ** 2)).toFixed(3); }
     else { $('gLabel').textContent = 'Drive'; $('gamma').textContent = 'Alcubierre bubble'; }
   }
@@ -1060,10 +1659,15 @@ body.idle #space { cursor: none; }
       buildFrame();
     }
     adapt(dt);
-    const vel = visVel(cur), c = speedC(cur);
-    travelledAU += c * AU_PER_LS * dt;
+    const js = updateJump(dt);
+    let vel = visVel(cur);
+    const c = speedC(cur);
+    if (tunnelK > 0) vel = 2.5 + 9 * tunnelK;
+    else travelledAU += c * AU_PER_LS * dt;
     travel += vel * dt;
-    const warp = Math.max(0, Math.min(1, (cur - 0.5) / 0.5));
+    const warp = tunnelK > 0 ? 1 : Math.max(0, Math.min(1, (cur - 0.5) / 0.5));
+    const beta = (!jump && c < 1) ? Math.min(c, 0.995) : 0;
+    updateArrival(vel, dt);
 
     steerX += (aimX - steerX) * Math.min(1, dt * 2);
     steerY += (aimY - steerY) * Math.min(1, dt * 2);
@@ -1074,21 +1678,27 @@ body.idle #space { cursor: none; }
     ctx.setTransform(1, 0, 0, 1, 0, 0);
     ctx.globalCompositeOperation = 'source-over';
     ctx.globalAlpha = 1;
-    ctx.drawImage(bandCanvas, -steerX * 14 * DPR, -steerY * 10 * DPR);
+    let bhReal = !!(obj && obj.d.kind === 'blackhole' && GL && TH.style === 'real');
+    if (bhReal) bhReal = drawBlackHole(now);
+    if (!bhReal) ctx.drawImage(bandCanvas, -steerX * 14 * DPR, -steerY * 10 * DPR);
 
-    const shake = reduce ? 0 : warp * warp * 2.2 * DPR;
+    let shake = reduce ? 0 : warp * warp * 2.2 * DPR;
+    if (js && js.stage === 'charge' && !reduce) shake += js.k * js.k * 4 * DPR;
     ctx.save();
     if (shake) ctx.translate((Math.random() - 0.5) * shake, (Math.random() - 0.5) * shake);
 
     drawNebulae(vel, dt);
     if (TH.style === 'neon') drawSun();
+    if (!bhReal) drawBlackHoleFlat();
+    drawArrival(now);
 
     // planet
-    if (!planet && travel > nextPlanetAt) spawnPlanet();
+    if (!planet && travel > nextPlanetAt && !jump && (!obj || here.planets)) spawnPlanet();
     if (planet) {
       const p = planet;
       p.z -= vel * dt * 0.32;
       const px = vpx + (p.x / p.z) * F, py = vpy + (p.y / p.z) * F, R = (p.r / p.z) * F;
+      if (!p.whoosh && p.z < 0.9 && R > Math.min(W, H) * 0.22) { p.whoosh = true; sfx('whoosh', Math.sign(px - W / 2) || 1); }
       if (p.z < 0.15 || px + R * 2 < 0 || px - R * 2 > W || py - R * 2 > H || py + R * 2 < 0) {
         if (p.z < 3) { planet = null; nextPlanetAt = travel + 7 + Math.random() * 9; }
       } else {
@@ -1102,7 +1712,17 @@ body.idle #space { cursor: none; }
       }
     }
 
-    drawStars(vel, dt, warp);
+    drawStars(vel, dt, warp, beta);
+
+    // hyperspace tunnel
+    if (tunnelK > 0.01) {
+      if (GL) {
+        const cols = TH.style === 'neon' ? [[1, 0.36, 0.88], [0.36, 0.96, 1]] : TH.style === 'toon' ? [[1, 0.85, 0.3], [1, 0.42, 0.6]]
+          : TH.mono ? [[1, 1, 1], [0.55, 0.55, 0.55]] : [[0.55, 0.78, 1], [0.8, 0.55, 1]];
+        const img = GL.run('tunnel', Math.round(W * 0.5), Math.round(H * 0.5), { uRes: [W, H], uVp: [vpx, vpy], uTime: now / 1000, uK: tunnelK, uC1: cols[0], uC2: cols[1] });
+        if (img) { ctx.globalCompositeOperation = 'lighter'; ctx.drawImage(img, 0, 0, W, H); ctx.globalCompositeOperation = 'source-over'; }
+      }
+    }
     if (TH.style === 'neon') drawGrid(warp);
 
     // warp glow
@@ -1123,8 +1743,13 @@ body.idle #space { cursor: none; }
     vg.addColorStop(0, 'rgba(0,0,0,0)'); vg.addColorStop(1, `rgba(0,0,0,${(TH.style === 'toon' ? 0.3 : 0.55) + warp * 0.2})`);
     ctx.fillStyle = vg; ctx.fillRect(0, 0, W, H);
 
-    drawReticle(warp);
+    if (!jump && !(obj && obj.d.kind === 'blackhole')) drawReticle(warp);
     if (cockpit) drawCockpit(now, warp);
+
+    // exit flash from hyperspace
+    if (js && js.stage === 'flash') {
+      ctx.globalAlpha = Math.pow(js.k, 1.5); ctx.fillStyle = TH.style === 'toon' ? '#fffaf0' : '#ffffff'; ctx.fillRect(0, 0, W, H); ctx.globalAlpha = 1;
+    }
 
     // theme-change flash
     if (flash > 0) {
@@ -1132,12 +1757,7 @@ body.idle #space { cursor: none; }
       flash = Math.max(0, flash - dt * 2.2);
     }
 
-    if (audio && audio.on) {
-      const t = audio.ac.currentTime;
-      audio.o1.frequency.setTargetAtTime(38 + cur * 70, t, 0.15);
-      audio.o2.frequency.setTargetAtTime(76 + cur * 160, t, 0.15);
-      audio.lp.frequency.setTargetAtTime(220 + cur * 1600, t, 0.15);
-    }
+    updateAudio();
     hud(now, c);
     requestAnimationFrame(frame);
   }
@@ -1179,7 +1799,7 @@ body.idle #space { cursor: none; }
     ctx.globalCompositeOperation = 'source-over';
   }
 
-  function drawStars(vel, dt, warp) {
+  function drawStars(vel, dt, warp, beta) {
     const trail = vel * 0.045 + 0.0015;
     const NC = TH.stars.length;
     const xmin = -W * 0.2, xmax = W * 1.2, ymin = -H * 0.2, ymax = H * 1.2;
@@ -1187,13 +1807,21 @@ body.idle #space { cursor: none; }
       let z = sz[i] - vel * dt;
       if (z <= 0.012) { resetStar(i, 1); z = 1; }
       sz[i] = z;
-      const x1 = vpx + (sx[i] / z) * F, y1 = vpy + (sy[i] / z) * F;
+      // below light speed, stars crowd toward the direction of travel (relativistic aberration)
+      let ax = sx[i], ay = sy[i], shift = 0;
+      if (beta > 0.05) {
+        const tn = Math.hypot(ax, ay) / z, cs = 1 / Math.sqrt(1 + tn * tn);
+        const c2 = (cs + beta) / (1 + beta * cs), t2 = Math.sqrt(Math.max(0, 1 - c2 * c2)) / c2;
+        if (tn > 1e-6) { const f = t2 / tn; ax *= f; ay *= f; }
+        if (NC === 7) shift = Math.round(beta * 3 * Math.max(0, c2 * 2 - 1));
+      }
+      const x1 = vpx + (ax / z) * F, y1 = vpy + (ay / z) * F;
       if (x1 < xmin || x1 > xmax || y1 < ymin || y1 > ymax) { resetStar(i, 0.85 + Math.random() * 0.15); sB[i] = -1; continue; }
       const z2 = z + trail;
       sX1[i] = x1; sY1[i] = y1;
-      sX2[i] = vpx + (sx[i] / z2) * F; sY2[i] = vpy + (sy[i] / z2) * F;
+      sX2[i] = vpx + (ax / z2) * F; sY2[i] = vpy + (ay / z2) * F;
       const band = z < 0.22 ? 3 : z < 0.45 ? 2 : z < 0.72 ? 1 : 0;
-      sB[i] = band * NC + (sc[i] % NC);
+      sB[i] = band * NC + Math.max(0, (sc[i] % NC) - shift);
     }
     ctx.lineCap = 'round';
     ctx.globalCompositeOperation = TH.starBlend;
@@ -1434,10 +2062,11 @@ body.idle #space { cursor: none; }
     if (fpsT < 2) return;
     const fps = fpsN / fpsT; fpsT = 0; fpsN = 0;
     if (warmup > 0) { warmup--; return; }
-    slowStreak = fps < 42 ? slowStreak + 1 : 0;
+    slowStreak = fps < 30 ? slowStreak + 1 : 0;
     if (slowStreak < 2) return;
     slowStreak = 0;
-    if (planetCap > 384 && planet) planetCap = planetCap / 2;
+    if (obj && obj.d.kind === 'blackhole' && bhScale > 0.45) bhScale -= 0.15;
+    else if (planetCap > 512 && (planet || obj)) planetCap = planetCap / 2;
     else if (N > 500) N = Math.floor(N * 0.7);
     else if (dprCap > 1) { dprCap = 1; resize(); }
     else if (nebs.length > 3) nebs.length = 3;
@@ -1459,6 +2088,18 @@ body.idle #space { cursor: none; }
   }
 
   applyTheme(themeId, false);
+  {
+    const at = DESTS.find(d => d.id === new URLSearchParams(location.search).get('at'));
+    if (at) { here = at; setTimeout(() => showFact(at), 1500); }
+  }
+  renderDestList();
+  if (here !== DESTS[0]) { spawnArrival(here); planet = null; nextPlanetAt = 30; }
+  {
+    const nz = parseFloat(new URLSearchParams(location.search).get('near'));
+    if (obj && nz > 0) obj.z = nz;
+    const bq = parseFloat(new URLSearchParams(location.search).get('bhq'));
+    if (bq > 0) bhScale = bq;
+  }
   new ResizeObserver(resize).observe(dash);
   addEventListener('resize', resize);
   resize();
