@@ -1,0 +1,1077 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Deep Field Cruiser · Fly Through Space at Warp Speed</title>
+<meta name="description" content="Sit in a spaceship cockpit and fly through stars, nebulae and planets. Set your speed from a slow drift to 1000× light speed. Free, no download, works on phone and desktop.">
+<meta name="theme-color" content="#020308">
+<link rel="canonical" href="https://rizwanalikhan007.github.io/deep-field-cruiser/">
+<meta property="og:type" content="website">
+<meta property="og:title" content="Deep Field Cruiser · Fly Through Space at Warp Speed">
+<meta property="og:description" content="A cockpit view of the universe. Pick a speed, pick a theme, and drift or warp toward Proxima Centauri.">
+<meta property="og:url" content="https://rizwanalikhan007.github.io/deep-field-cruiser/">
+<meta property="og:image" content="https://rizwanalikhan007.github.io/deep-field-cruiser/og.jpg">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Deep Field Cruiser">
+<meta name="twitter:description" content="Fly through space from a spaceship cockpit. Slow drift to full warp.">
+<meta name="twitter:image" content="https://rizwanalikhan007.github.io/deep-field-cruiser/og.jpg">
+<link rel="icon" href="favicon.svg" type="image/svg+xml">
+<link rel="icon" href="icon-192.png" type="image/png" sizes="192x192">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<link rel="manifest" href="manifest.webmanifest">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"VideoGame","name":"Deep Field Cruiser","url":"https://rizwanalikhan007.github.io/deep-field-cruiser/","description":"A browser space flight experience: a cockpit view where you control the ship's speed from a slow drift to warp, with four visual themes.","genre":["Simulation","Ambient"],"gamePlatform":["Web browser","Mobile"],"applicationCategory":"Game","operatingSystem":"Any","offers":{"@type":"Offer","price":"0","priceCurrency":"USD"}}
+</script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@500;600&family=Fredoka:wght@500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+/* Layout: full-bleed canvas seen through a cockpit window; instrument console docked along the bottom edge.
+   Single dark world by design; the in-page theme switcher rewrites these tokens. */
+:root {
+  --void: #020308;
+  --hull-top: #0d121c;
+  --hull: #0b0f17;
+  --hull-edge: #1c2433;
+  --ink: #d9e4f3;
+  --dim: #7f8ca4;
+  --signal: #7fe3ff;
+  --heat: #ffb067;
+  --track: #1a2130;
+  --btn: #121826;
+  --btn-edge: #263044;
+  --radius: 3px;
+  --font-display: "Chakra Petch", "Segoe UI", system-ui, sans-serif;
+  --font-data: "IBM Plex Mono", ui-monospace, "SF Mono", Menlo, monospace;
+  color-scheme: dark;
+}
+*, *::before, *::after { box-sizing: border-box; }
+[hidden] { display: none !important; }
+html, body { height: 100%; }
+body {
+  margin: 0; overflow: hidden; font-size: 14px; -webkit-tap-highlight-color: transparent; background: var(--void); color: var(--ink);
+  font-family: var(--font-data); -webkit-user-select: none; user-select: none;
+}
+#space { position: fixed; inset: 0; width: 100%; height: 100%; display: block; touch-action: none; cursor: crosshair; }
+
+.topline {
+  position: fixed; top: 0; left: 0; right: 0; z-index: 3; pointer-events: none;
+  padding-top: calc(env(safe-area-inset-top, 0px) + 8px);
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+  display: flex; justify-content: space-between; gap: 12px; align-items: center;
+  font-size: 11px; letter-spacing: .14em; text-transform: uppercase; color: var(--dim);
+}
+.topline b { font-family: var(--font-display); font-weight: 600; color: var(--ink); letter-spacing: .2em; font-size: 12px; white-space: nowrap; }
+.topline .right { display: flex; align-items: center; gap: 14px; min-width: 0; }
+.topline .hint { text-align: right; }
+
+.theme-btn, .presets button, .sound {
+  pointer-events: auto;
+  font: 500 11px/1 var(--font-data); letter-spacing: .1em; text-transform: uppercase;
+  color: var(--ink); background: var(--btn); border: 1px solid var(--btn-edge); border-radius: var(--radius);
+  padding: 8px 11px; cursor: pointer; white-space: nowrap;
+}
+.theme-btn { display: inline-flex; align-items: center; gap: 8px; }
+.theme-btn .dot { width: 12px; height: 12px; border-radius: 50%; background: var(--swatch, linear-gradient(135deg, var(--signal), var(--heat))); box-shadow: 0 0 0 1px var(--btn-edge); }
+.theme-btn:hover, .presets button:hover, .sound:hover { border-color: var(--signal); color: var(--signal); }
+.theme-btn:focus-visible, .presets button:focus-visible, .sound:focus-visible, .theme-card:focus-visible { outline: 2px solid var(--signal); outline-offset: 2px; }
+
+.theme-panel {
+  position: fixed; z-index: 4;
+  top: calc(env(safe-area-inset-top, 0px) + 46px);
+  right: max(16px, env(safe-area-inset-right, 0px));
+  width: min(360px, calc(100vw - 32px));
+  background: var(--hull); border: 1px solid var(--btn-edge); border-radius: calc(var(--radius) * 2);
+  box-shadow: 0 20px 50px rgba(0,0,0,.6); padding: 14px;
+  display: grid; gap: 10px;
+}
+.theme-panel .label { margin-bottom: 2px; }
+.theme-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.theme-card {
+  display: grid; gap: 8px; padding: 8px; text-align: left; cursor: pointer;
+  background: var(--btn); border: 1px solid var(--btn-edge); border-radius: var(--radius); color: var(--ink);
+  font: 500 12px/1.2 var(--font-data);
+}
+.theme-card:hover { border-color: var(--signal); }
+.theme-card[aria-checked="true"] { border-color: var(--signal); box-shadow: inset 0 0 0 1px var(--signal); }
+.theme-card .sw { height: 48px; border-radius: calc(var(--radius) - 1px); position: relative; overflow: hidden; }
+.theme-card small { display: block; color: var(--dim); font-size: 10.5px; margin-top: 2px; }
+.sw-deep { background: radial-gradient(circle at 70% 40%, #2a5f86 0, transparent 45%), radial-gradient(circle at 25% 70%, #6a2a6e 0, transparent 40%), #020308; }
+.sw-neon { background: linear-gradient(180deg, #07010f 0 52%, #1a0330 52%), #07010f; }
+.sw-neon::before { content: ""; position: absolute; left: 50%; top: 14%; width: 30px; height: 30px; margin-left: -15px; border-radius: 50%; background: linear-gradient(#ffe45c, #ff2bd6); }
+.sw-neon::after { content: ""; position: absolute; inset: 52% 0 0; background: repeating-linear-gradient(90deg, rgba(255,60,220,.8) 0 1px, transparent 1px 16px), repeating-linear-gradient(0deg, rgba(255,60,220,.8) 0 1px, transparent 1px 7px); }
+.sw-mono { background: radial-gradient(circle at 65% 45%, #fff 0 9px, #777 10px, transparent 18px), radial-gradient(#fff 1px, transparent 1.5px) 0 0 / 11px 9px, #000; }
+.sw-toon { background: radial-gradient(circle at 66% 50%, #ff8a5c 0 13px, #0b0820 14px 16px, transparent 17px), radial-gradient(circle at 26% 40%, #fff7c2 0 3px, transparent 4px), radial-gradient(circle at 40% 75%, #9ff3ff 0 2px, transparent 3px), #1d1a52; }
+
+.dash {
+  position: fixed; left: 0; right: 0; bottom: 0; z-index: 2;
+  padding-top: 14px;
+  padding-bottom: calc(env(safe-area-inset-bottom, 0px) + 14px);
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+  background: linear-gradient(180deg, var(--hull-top) 0%, var(--hull) 40%);
+  border-top: 1px solid var(--hull-edge);
+  box-shadow: 0 -18px 40px rgba(0,0,0,.55);
+}
+.console {
+  max-width: 1180px; margin: 0 auto;
+  display: grid; grid-template-columns: minmax(0,1.1fr) minmax(0,2fr) minmax(0,1.1fr); gap: 28px; align-items: center;
+}
+.label { font-size: 10.5px; letter-spacing: .16em; text-transform: uppercase; color: var(--dim); }
+.velocity .num {
+  font-family: var(--font-display); font-weight: 600; font-size: clamp(30px, 4.4vw, 46px); line-height: 1.05;
+  font-variant-numeric: tabular-nums; color: var(--ink);
+}
+.velocity .num small { font-size: .45em; color: var(--signal); margin-left: 4px; letter-spacing: .05em; }
+.velocity .sub { font-size: 12px; color: var(--dim); font-variant-numeric: tabular-nums; margin-top: 2px; }
+.mode { display: inline-block; margin-top: 8px; padding: 2px 8px; border: 1px solid currentColor; border-radius: var(--radius); font-size: 10.5px; letter-spacing: .16em; text-transform: uppercase; color: var(--signal); }
+.mode.warp { color: var(--heat); }
+
+.throttle { display: grid; gap: 10px; }
+.throttle-head { display: flex; justify-content: space-between; align-items: baseline; }
+.throttle-head output { font-family: var(--font-display); font-size: 15px; color: var(--ink); font-variant-numeric: tabular-nums; }
+input[type=range] {
+  --p: 35%;
+  -webkit-appearance: none; appearance: none; width: 100%; height: 28px; background: transparent; margin: 0; cursor: pointer;
+}
+input[type=range]::-webkit-slider-runnable-track {
+  height: 6px; border-radius: 3px;
+  background: linear-gradient(90deg, var(--signal) 0%, var(--signal) 40%, var(--heat) 100%) 0 0 / var(--p) 100% no-repeat, var(--track);
+  box-shadow: inset 0 0 0 1px var(--btn-edge);
+}
+input[type=range]::-moz-range-track { height: 6px; border-radius: 3px; background: var(--track); }
+input[type=range]::-moz-range-progress { height: 6px; border-radius: 3px; background: linear-gradient(90deg, var(--signal), var(--heat)); }
+input[type=range]::-webkit-slider-thumb {
+  -webkit-appearance: none; width: 18px; height: 28px; margin-top: -11px; border-radius: var(--radius);
+  background: linear-gradient(180deg, #f2f5fa, #a3adbd); border: 1px solid #0b0f17;
+  box-shadow: 0 0 0 1px var(--btn-edge), 0 0 14px -2px var(--signal);
+}
+input[type=range]::-moz-range-thumb {
+  width: 18px; height: 28px; border-radius: var(--radius); background: linear-gradient(180deg, #f2f5fa, #a3adbd);
+  border: 1px solid #0b0f17; box-shadow: 0 0 14px -2px var(--signal);
+}
+input[type=range]:focus-visible { outline: 2px solid var(--signal); outline-offset: 4px; border-radius: 4px; }
+.ticks { display: flex; justify-content: space-between; font-size: 10px; color: var(--dim); font-variant-numeric: tabular-nums; margin-top: -4px; }
+.presets { display: flex; flex-wrap: wrap; gap: 8px; }
+.presets button[data-t="1"]:hover { border-color: var(--heat); color: var(--heat); }
+
+.nav { display: grid; gap: 10px; }
+.nav .row { display: flex; justify-content: space-between; gap: 12px; align-items: baseline; }
+.nav .val { font-size: 14px; font-variant-numeric: tabular-nums; color: var(--ink); text-align: right; }
+.sound { justify-self: start; }
+.sound[aria-pressed="true"] { color: var(--signal); border-color: var(--signal); }
+
+.tools { display: flex; gap: 6px; pointer-events: auto; }
+.tool {
+  width: 32px; height: 32px; display: grid; place-items: center; padding: 0; cursor: pointer;
+  color: var(--ink); background: var(--btn); border: 1px solid var(--btn-edge); border-radius: var(--radius);
+}
+.tool svg { width: 16px; height: 16px; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+.tool:hover, .tool[aria-pressed="true"] { color: var(--signal); border-color: var(--signal); }
+.tool:focus-visible { outline: 2px solid var(--signal); outline-offset: 2px; }
+
+/* Zen mode: console tucked away, window fills the screen */
+.dash { transition: transform .45s ease, opacity .45s ease; }
+body.zen .dash { transform: translateY(110%); opacity: 0; pointer-events: none; }
+body.zen .topline > span:first-child, body.zen .topline .hint, body.zen .theme-btn { opacity: 0; pointer-events: none; }
+body.zen .topline > span:first-child, .topline .hint, .theme-btn { transition: opacity .4s ease; }
+body.zen.idle .tools { opacity: 0; transition: opacity .6s ease; }
+body.idle #space { cursor: none; }
+
+.toast {
+  position: fixed; left: 50%; z-index: 5; transform: translateX(-50%);
+  top: calc(env(safe-area-inset-top, 0px) + 56px);
+  background: var(--hull); color: var(--ink); border: 1px solid var(--signal); border-radius: var(--radius);
+  padding: 9px 14px; font-size: 12px; letter-spacing: .04em; max-width: calc(100vw - 32px); text-align: center;
+  box-shadow: 0 10px 30px rgba(0,0,0,.5);
+}
+.noscript { position: fixed; inset: 0; display: grid; place-items: center; padding: 24px; text-align: center; color: var(--ink); background: var(--void); z-index: 10; }
+
+@media (max-width: 760px) {
+  .theme-btn #themeName { display: none; }
+  .topline b { letter-spacing: .1em; font-size: 11px; }
+  .tools { gap: 4px; }
+  .topline .right { gap: 6px; }
+  .theme-btn { padding: 0; width: 32px; height: 32px; justify-content: center; }
+  .console { grid-template-columns: minmax(0,1fr) minmax(0,1fr); gap: 14px 18px; }
+  .throttle { grid-column: 1 / -1; order: 3; }
+  .topline .hint { display: none; }
+  .topline .dest { display: none; }
+  .nav .val { font-size: 12.5px; }
+  .presets button { padding: 7px 9px; }
+}
+</style>
+</head>
+<body>
+<canvas id="space" aria-label="View through the cockpit window of a ship flying through space"></canvas>
+
+<div class="topline">
+  <span><b>Deep Field Cruiser</b><span class="dest"> &nbsp;· bound for Proxima Centauri</span></span>
+  <span class="right">
+    <span class="hint">↑ ↓ or W / S to throttle · Space to stop · T themes · H hide controls</span>
+    <button type="button" class="theme-btn" id="themeBtn" aria-haspopup="true" aria-expanded="false" aria-controls="themePanel" title="Change theme">
+      <span class="dot" aria-hidden="true"></span><span id="themeName">Deep Space</span>
+    </button>
+    <span class="tools">
+      <button type="button" class="tool" id="tiltBtn" aria-pressed="false" aria-label="Steer by tilting your phone" title="Tilt to steer" hidden>
+        <svg viewBox="0 0 24 24"><rect x="7" y="2.5" width="10" height="19" rx="2"/><path d="M3 9c-1 2-1 4 0 6M21 9c1 2 1 4 0 6"/></svg>
+      </button>
+      <button type="button" class="tool" id="shareBtn" aria-label="Share this view" title="Share">
+        <svg viewBox="0 0 24 24"><path d="M12 15V3M7 8l5-5 5 5"/><path d="M5 12v7a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-7"/></svg>
+      </button>
+      <button type="button" class="tool" id="zenBtn" aria-pressed="false" aria-label="Hide controls" title="Hide controls (H)">
+        <svg viewBox="0 0 24 24"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/></svg>
+      </button>
+      <button type="button" class="tool" id="fsBtn" aria-label="Full screen" title="Full screen (F)">
+        <svg viewBox="0 0 24 24"><path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/></svg>
+      </button>
+    </span>
+  </span>
+</div>
+<div class="toast" id="toast" role="status" aria-live="polite" hidden></div>
+<noscript><div class="noscript">Deep Field Cruiser needs JavaScript turned on to fly.</div></noscript>
+
+<div class="theme-panel" id="themePanel" role="radiogroup" aria-label="Universe theme" hidden>
+  <div class="label">Universe theme</div>
+  <div class="theme-grid">
+    <button type="button" class="theme-card" role="radio" data-theme-id="deep"><span class="sw sw-deep"></span><span>Deep Space<small>Realistic nebulae and planets</small></span></button>
+    <button type="button" class="theme-card" role="radio" data-theme-id="neon"><span class="sw sw-neon"></span><span>Neon Grid<small>Retro sun over a glowing grid</small></span></button>
+    <button type="button" class="theme-card" role="radio" data-theme-id="mono"><span class="sw sw-mono"></span><span>Monochrome<small>Black and white, high contrast</small></span></button>
+    <button type="button" class="theme-card" role="radio" data-theme-id="toon"><span class="sw sw-toon"></span><span>Cartoon<small>Flat colours, bold outlines</small></span></button>
+  </div>
+</div>
+
+<div class="dash">
+  <div class="console">
+    <div class="velocity">
+      <div class="label">Velocity</div>
+      <div class="num"><span id="vC">0.000</span><small>c</small></div>
+      <div class="sub"><span id="vKm">0</span> km/s</div>
+      <span class="mode" id="mode">Drift</span>
+    </div>
+
+    <div class="throttle">
+      <div class="throttle-head">
+        <label class="label" for="throttle">Throttle</label>
+        <output id="tOut" for="throttle">35%</output>
+      </div>
+      <input type="range" id="throttle" min="0" max="100" step="0.1" value="35">
+      <div class="ticks"><span>0</span><span>0.1c</span><span>1c</span><span>10c</span><span>100c</span><span>1000c</span></div>
+      <div class="presets">
+        <button type="button" data-t="0.1">Drift</button>
+        <button type="button" data-t="0.28">Cruise</button>
+        <button type="button" data-t="0.4">Light speed</button>
+        <button type="button" data-t="1">Full warp</button>
+      </div>
+    </div>
+
+    <div class="nav">
+      <div class="row"><span class="label">Travelled</span><span class="val" id="dist">0.00 AU</span></div>
+      <div class="row"><span class="label">Proxima ETA</span><span class="val" id="eta">—</span></div>
+      <div class="row"><span class="label" id="gLabel">Time dilation</span><span class="val" id="gamma">γ 1.000</span></div>
+      <button type="button" class="sound" id="sound" aria-pressed="false">Engine sound: off</button>
+    </div>
+  </div>
+</div>
+
+<script>
+(() => {
+  const cv = document.getElementById('space');
+  const ctx = cv.getContext('2d');
+  const dash = document.querySelector('.dash');
+  const slider = document.getElementById('throttle');
+  const $ = id => document.getElementById(id);
+  const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  // ---------- themes ----------
+  const THEMES = {
+    deep: {
+      name: 'Deep Space', style: 'real', bg: '#020308',
+      band: '150,140,170', dust: '210,220,255', dustCount: 2600, dustSize: 0.7,
+      stars: ['#e2ebff', '#ffd6a3', '#a9e7ff'], warpStar: '#bfe2ff', starW: 1, starBlend: 'source-over',
+      nebs: ['64,170,220', '190,70,170', '110,80,210', '230,130,70', '40,190,170'], nebAlpha: 1,
+      planets: [
+        { lite: '#ffd2a6', base: '#c4723f', dark: '#2a1009', atmo: '255,160,100', bands: true, ring: true },
+        { lite: '#e4f6ff', base: '#5f9fca', dark: '#08182a', atmo: '120,200,255', bands: true, ring: false },
+        { lite: '#e9dcff', base: '#7c66c4', dark: '#140b2c', atmo: '170,140,255', bands: false, ring: true },
+        { lite: '#d9ffe9', base: '#4fa383', dark: '#06201a', atmo: '110,230,180', bands: false, ring: false },
+        { lite: '#fff1d9', base: '#b39a7a', dark: '#1d150c', atmo: '230,200,160', bands: true, ring: true }
+      ],
+      warp: ['190,235,255', '110,190,255', '60,90,255'],
+      frame: ['#0c1019', '#080b12', '#0b0f17'], frameEdge: '#141a26', edge: '127,227,255', bolt: '#232c3d',
+      css: { '--void': '#020308', '--hull-top': '#0d121c', '--hull': '#0b0f17', '--hull-edge': '#1c2433', '--ink': '#d9e4f3', '--dim': '#7f8ca4', '--signal': '#7fe3ff', '--heat': '#ffb067', '--track': '#1a2130', '--btn': '#121826', '--btn-edge': '#263044', '--radius': '3px', '--font-display': '"Chakra Petch", "Segoe UI", system-ui, sans-serif', '--swatch': 'linear-gradient(135deg, #2a5f86, #6a2a6e)' }
+    },
+    neon: {
+      name: 'Neon Grid', style: 'neon', bg: '#07010f', grid: '255,60,220',
+      band: '255,60,200', dust: '255,190,255', dustCount: 1800, dustSize: 0.8,
+      stars: ['#ff8af6', '#7af9ff', '#fff1ff'], warpStar: '#ffffff', starW: 1.15, starBlend: 'lighter',
+      nebs: ['255,40,190', '120,40,255', '0,220,255'], nebAlpha: 0.8,
+      planets: [
+        { atmo: '255,60,220', ring: true }, { atmo: '0,240,255', ring: false }, { atmo: '170,90,255', ring: true },
+        { atmo: '255,210,70', ring: false }, { atmo: '80,255,170', ring: true }
+      ],
+      warp: ['255,190,250', '255,60,220', '120,40,255'],
+      frame: ['#12041f', '#0a0214', '#12041f'], frameEdge: '#1e0833', edge: '255,60,220', bolt: '#3a1458',
+      css: { '--void': '#07010f', '--hull-top': '#16052a', '--hull': '#0d0219', '--hull-edge': '#3a1458', '--ink': '#fbe9ff', '--dim': '#a07bb8', '--signal': '#ff5ce1', '--heat': '#5cf6ff', '--track': '#22093a', '--btn': '#170629', '--btn-edge': '#45196a', '--radius': '2px', '--font-display': '"Chakra Petch", "Segoe UI", system-ui, sans-serif', '--swatch': 'linear-gradient(#ffe45c, #ff2bd6)' }
+    },
+    mono: {
+      name: 'Monochrome', style: 'real', bg: '#000000',
+      band: '200,200,200', dust: '255,255,255', dustCount: 2800, dustSize: 0.7,
+      stars: ['#ffffff', '#d6d6d6', '#bdbdbd'], warpStar: '#ffffff', starW: 1, starBlend: 'source-over',
+      nebs: ['220,220,220', '150,150,150', '90,90,90'], nebAlpha: 0.7,
+      planets: [
+        { lite: '#ffffff', base: '#9c9c9c', dark: '#080808', atmo: '235,235,235', bands: true, ring: true },
+        { lite: '#f2f2f2', base: '#6e6e6e', dark: '#050505', atmo: '200,200,200', bands: false, ring: false },
+        { lite: '#ffffff', base: '#bdbdbd', dark: '#101010', atmo: '255,255,255', bands: true, ring: false },
+        { lite: '#e6e6e6', base: '#555555', dark: '#000000', atmo: '170,170,170', bands: false, ring: true }
+      ],
+      warp: ['255,255,255', '200,200,200', '120,120,120'],
+      frame: ['#0b0b0b', '#050505', '#0b0b0b'], frameEdge: '#151515', edge: '255,255,255', bolt: '#2a2a2a',
+      css: { '--void': '#000000', '--hull-top': '#111111', '--hull': '#0a0a0a', '--hull-edge': '#2b2b2b', '--ink': '#f2f2f2', '--dim': '#8c8c8c', '--signal': '#ffffff', '--heat': '#ffffff', '--track': '#1c1c1c', '--btn': '#121212', '--btn-edge': '#333333', '--radius': '0px', '--font-display': '"Chakra Petch", "Segoe UI", system-ui, sans-serif', '--swatch': 'linear-gradient(135deg, #fff 50%, #000 50%)' }
+    },
+    toon: {
+      name: 'Cartoon', style: 'toon', bg: '#1d1a52',
+      band: '140,120,255', dust: '255,247,194', dustCount: 700, dustSize: 1.8,
+      stars: ['#fff7c2', '#ffffff', '#9ff3ff'], warpStar: '#ffffff', starW: 1.8, starBlend: 'source-over',
+      nebs: ['255,120,190', '120,200,255', '180,140,255', '255,200,90'], nebAlpha: 1.3,
+      planets: [
+        { base: '#ff8a5c', dark: '#c9453a', atmo: '255,180,120', bands: true, ring: true },
+        { base: '#5cc8ff', dark: '#2f6fd1', atmo: '150,220,255', bands: false, ring: false },
+        { base: '#b98cff', dark: '#6a45c9', atmo: '200,170,255', bands: true, ring: true },
+        { base: '#6fe08a', dark: '#2f9a63', atmo: '160,255,180', bands: false, ring: false },
+        { base: '#ffd84d', dark: '#e0872a', atmo: '255,230,140', bands: true, ring: true }
+      ],
+      warp: ['255,250,210', '255,216,77', '255,107,154'],
+      frame: ['#2a2366', '#211b55', '#2a2366'], frameEdge: '#0b0820', edge: '255,216,77', bolt: '#ffd84d',
+      css: { '--void': '#1d1a52', '--hull-top': '#2d2670', '--hull': '#221c5a', '--hull-edge': '#0b0820', '--ink': '#fffaf0', '--dim': '#b6aee8', '--signal': '#ffd84d', '--heat': '#ff6b9a', '--track': '#15113d', '--btn': '#2f2878', '--btn-edge': '#0b0820', '--radius': '10px', '--font-display': '"Fredoka", "Trebuchet MS", system-ui, sans-serif', '--swatch': 'linear-gradient(135deg, #ff8a5c, #5cc8ff)' }
+    }
+  };
+  let TH = THEMES.deep, themeId = 'deep';
+
+  const AU_PER_LS = 0.0020039888;          // AU travelled per second at 1c
+  const PROXIMA_AU = 4.2465 * 63241.077;   // 4.2465 light-years
+  const LY_AU = 63241.077;
+
+  let W = 0, H = 0, DPR = 1, F = 1, dashH = 0;
+  let target = reduce ? 0.2 : 0.35, cur = 0.12;
+  let travelledAU = 0, travel = 0, nextPlanetAt = 9, flash = 0;
+  let vpx = 0, vpy = 0, steerX = 0, steerY = 0, aimX = 0, aimY = 0;
+  let windowPath = null, frameGrad = null, bandCanvas = null;
+  let zen = false, dashCur = 0, dprCap = 2, starScale = 1;
+
+  try { const saved = localStorage.getItem('dfc-theme'); if (saved && THEMES[saved]) themeId = saved; } catch (e) {}
+  try { const au = parseFloat(localStorage.getItem('dfc-au')); if (au > 0) travelledAU = au; } catch (e) {}
+  // shared links: ?theme=neon&speed=40
+  const params = new URLSearchParams(location.search);
+  if (THEMES[params.get('theme')]) themeId = params.get('theme');
+  const sp = parseFloat(params.get('speed'));
+  if (isFinite(sp)) { target = Math.max(0, Math.min(100, sp)) / 100; cur = target * 0.5; }
+  TH = THEMES[themeId];
+
+  // ---------- stars ----------
+  let N = 0, sx, sy, sz, sc;
+  const sX1 = [], sY1 = [], sX2 = [], sY2 = [], sB = [];
+  function seedStars() {
+    N = Math.max(700, Math.min(1900, Math.round((innerWidth * innerHeight) / 850)));
+    sx = new Float32Array(N); sy = new Float32Array(N); sz = new Float32Array(N); sc = new Uint8Array(N);
+    for (let i = 0; i < N; i++) resetStar(i, Math.random());
+  }
+  function resetStar(i, z) {
+    sx[i] = (Math.random() * 2 - 1) * 1.6;
+    sy[i] = (Math.random() * 2 - 1) * 1.6;
+    sz[i] = z;
+    const r = Math.random();
+    sc[i] = r < 0.68 ? 0 : r < 0.86 ? 1 : 2;
+  }
+  const BAND_W = [0.6, 1.0, 1.6, 2.5], BAND_A = [0.35, 0.6, 0.85, 1];
+
+  // ---------- nebulae ----------
+  const nebs = [];
+  function newNeb(far) {
+    return {
+      x: (Math.random() * 2 - 1) * 2.2, y: (Math.random() * 2 - 1) * 1.6,
+      z: far ? 7 + Math.random() * 3 : 1.5 + Math.random() * 8,
+      r: 1.4 + Math.random() * 2.2, ci: (Math.random() * 10) | 0,
+      a: 0.10 + Math.random() * 0.12
+    };
+  }
+  for (let i = 0; i < 7; i++) nebs.push(newNeb(false));
+
+  // ---------- planets ----------
+  let planet = null;
+  function spawnPlanet(z) {
+    const r = 0.35 + Math.random() * 0.5;
+    const side = Math.random() < 0.5 ? -1 : 1;
+    planet = {
+      r, z: z || 10, x: side * (r + 0.35 + Math.random() * 0.9), y: (Math.random() - 0.55) * 0.9,
+      ki: (Math.random() * 10) | 0, tilt: (Math.random() - 0.5) * 0.7, seed: Math.random() * 10
+    };
+  }
+  spawnPlanet(3.6);
+
+  // ---------- layout ----------
+  function resize() {
+    DPR = Math.min(window.devicePixelRatio || 1, dprCap);
+    W = Math.round(innerWidth * DPR); H = Math.round(innerHeight * DPR);
+    cv.width = W; cv.height = H;
+    dashH = dash.offsetHeight * DPR;
+    dashCur = zen ? 0 : dashH;
+    F = Math.max(W, H) * 0.5;
+    buildFrame(); buildBand();
+    if (!N) seedStars();
+  }
+  function windowBox() {
+    const open = dashH ? dashCur / dashH : 1;
+    const T = Math.max(H * 0.05, 56 * DPR) * (0.55 + 0.45 * open);
+    const B = H - Math.max(dashCur, 10 * DPR) - 6 * DPR;
+    return { T, B, mid: (T + B) / 2 };
+  }
+  function buildFrame() {
+    const { T, B } = windowBox();
+    const k = T + (B - T) * 0.42;
+    const p = new Path2D();
+    p.moveTo(W * 0.15, T); p.lineTo(W * 0.85, T); p.lineTo(W * 0.985, k);
+    p.lineTo(W * 0.93, B); p.lineTo(W * 0.07, B); p.lineTo(W * 0.015, k); p.closePath();
+    windowPath = p;
+    frameGrad = ctx.createLinearGradient(0, 0, 0, H);
+    frameGrad.addColorStop(0, TH.frame[0]); frameGrad.addColorStop(0.5, TH.frame[1]); frameGrad.addColorStop(1, TH.frame[2]);
+  }
+  function buildBand() {
+    bandCanvas = document.createElement('canvas');
+    bandCanvas.width = W; bandCanvas.height = H;
+    const b = bandCanvas.getContext('2d');
+    b.fillStyle = TH.bg; b.fillRect(0, 0, W, H);
+    b.save(); b.translate(W / 2, H / 2); b.rotate(-0.42);
+    const g = b.createLinearGradient(0, -H * 0.35, 0, H * 0.35);
+    g.addColorStop(0, `rgba(${TH.band},0)`); g.addColorStop(0.42, `rgba(${TH.band},.06)`);
+    g.addColorStop(0.5, `rgba(${TH.band},.12)`); g.addColorStop(0.58, `rgba(${TH.band},.06)`); g.addColorStop(1, `rgba(${TH.band},0)`);
+    b.fillStyle = g; b.fillRect(-W, -H * 0.35, W * 2, H * 0.7);
+    for (let i = 0; i < TH.dustCount; i++) {
+      const spread = TH.style === 'toon' ? 0.9 : 0.2;
+      const x = (Math.random() * 2 - 1) * W, y = (Math.random() + Math.random() + Math.random() - 1.5) * H * spread;
+      b.fillStyle = `rgba(${TH.dust},${(TH.style === 'toon' ? 0.25 : 0) + Math.random() * 0.35})`;
+      const s = DPR * TH.dustSize * (Math.random() < 0.1 ? 1.7 : 1);
+      if (TH.style === 'toon') { b.beginPath(); b.arc(x, y, s, 0, Math.PI * 2); b.fill(); }
+      else b.fillRect(x, y, s, s);
+    }
+    b.restore();
+  }
+
+  // ---------- theme switching ----------
+  const themeBtn = $('themeBtn'), panel = $('themePanel');
+  function applyTheme(id, fromUser) {
+    if (!THEMES[id]) return;
+    themeId = id; TH = THEMES[id];
+    const root = document.documentElement.style;
+    for (const [k, v] of Object.entries(TH.css)) root.setProperty(k, v);
+    $('themeName').textContent = TH.name;
+    document.querySelectorAll('.theme-card').forEach(c => c.setAttribute('aria-checked', String(c.dataset.themeId === id)));
+    try { localStorage.setItem('dfc-theme', id); } catch (e) {}
+    if (W) { buildFrame(); buildBand(); }
+    if (fromUser) flash = 1;
+  }
+  function openPanel(open) {
+    panel.hidden = !open;
+    themeBtn.setAttribute('aria-expanded', String(open));
+    if (open) (panel.querySelector('[aria-checked="true"]') || panel.querySelector('.theme-card')).focus();
+  }
+  themeBtn.addEventListener('click', e => { e.stopPropagation(); openPanel(panel.hidden); });
+  panel.addEventListener('click', e => {
+    e.stopPropagation();
+    const card = e.target.closest('.theme-card');
+    if (card) { applyTheme(card.dataset.themeId, true); openPanel(false); themeBtn.focus(); }
+  });
+  document.addEventListener('click', () => { if (!panel.hidden) openPanel(false); });
+
+  // ---------- input ----------
+  function setTarget(t) {
+    target = Math.max(0, Math.min(1, t));
+    slider.value = (target * 100).toFixed(1);
+    paintSlider();
+  }
+  function paintSlider() {
+    slider.style.setProperty('--p', slider.value + '%');
+    $('tOut').textContent = Math.round(slider.value) + '%';
+  }
+  slider.addEventListener('input', () => { target = slider.value / 100; paintSlider(); });
+  document.querySelectorAll('.presets button').forEach(b => b.addEventListener('click', () => setTarget(+b.dataset.t)));
+  addEventListener('keydown', e => {
+    if (e.key === 'Escape' && !panel.hidden) { openPanel(false); themeBtn.focus(); return; }
+    if (e.target === slider && e.key.startsWith('Arrow')) return;
+    const k = e.key.toLowerCase();
+    if (k === 'arrowup' || k === 'w') { setTarget(target + 0.03); e.preventDefault(); }
+    else if (k === 'arrowdown' || k === 's') { setTarget(target - 0.03); e.preventDefault(); }
+    else if (k === 't') {
+      const ids = Object.keys(THEMES);
+      applyTheme(ids[(ids.indexOf(themeId) + 1) % ids.length], true);
+    }
+    else if (k === 'h') setZen(!zen);
+    else if (k === 'f') toggleFullscreen();
+    else if (k === ' ' && e.target.tagName !== 'BUTTON') { setTarget(0); e.preventDefault(); }
+    wake();
+  });
+  cv.addEventListener('wheel', e => { e.preventDefault(); setTarget(target - e.deltaY * 0.0005); wake(); }, { passive: false });
+  cv.addEventListener('pointermove', e => {
+    wake();
+    if (tiltOn) return;
+    if (e.pointerType !== 'mouse' && e.buttons === 0) return;
+    aimX = (e.clientX / innerWidth - 0.5) * 2;
+    aimY = (e.clientY / innerHeight - 0.5) * 2;
+  });
+  cv.addEventListener('pointerdown', e => {
+    wake();
+    if (tiltOn || e.pointerType === 'mouse') return;
+    aimX = (e.clientX / innerWidth - 0.5) * 2;
+    aimY = (e.clientY / innerHeight - 0.5) * 2;
+  });
+  const recenter = e => { if (!tiltOn && (e.type === 'pointerleave' || e.pointerType !== 'mouse')) { aimX = 0; aimY = 0; } };
+  cv.addEventListener('pointerleave', recenter);
+  cv.addEventListener('pointerup', recenter);
+  cv.addEventListener('pointercancel', recenter);
+  // double-tap / double-click the view to hide or show the controls
+  cv.addEventListener('dblclick', () => setZen(!zen));
+
+  // ---------- toast ----------
+  let toastTimer = 0;
+  function toast(msg) {
+    const t = $('toast'); t.textContent = msg; t.hidden = false;
+    clearTimeout(toastTimer); toastTimer = setTimeout(() => { t.hidden = true; }, 2600);
+  }
+
+  // ---------- zen mode + idle ----------
+  let idleTimer = 0;
+  function wake() {
+    document.body.classList.remove('idle');
+    clearTimeout(idleTimer);
+    idleTimer = setTimeout(() => document.body.classList.add('idle'), 2500);
+  }
+  function setZen(on) {
+    zen = on;
+    document.body.classList.toggle('zen', on);
+    $('zenBtn').setAttribute('aria-pressed', String(on));
+    $('zenBtn').setAttribute('aria-label', on ? 'Show controls' : 'Hide controls');
+    if (on) { openPanel(false); toast('Controls hidden · press H or double-tap to bring them back'); }
+    wake();
+  }
+  $('zenBtn').addEventListener('click', () => setZen(!zen));
+
+  // ---------- fullscreen ----------
+  const fsEl = document.documentElement;
+  const canFs = !!(fsEl.requestFullscreen || fsEl.webkitRequestFullscreen);
+  if (!canFs) $('fsBtn').hidden = true;
+  function toggleFullscreen() {
+    if (!canFs) return;
+    const inFs = document.fullscreenElement || document.webkitFullscreenElement;
+    try {
+      if (inFs) (document.exitFullscreen || document.webkitExitFullscreen).call(document);
+      else {
+        const r = (fsEl.requestFullscreen || fsEl.webkitRequestFullscreen).call(fsEl);
+        if (r && r.catch) r.catch(() => toast('Full screen is not available here'));
+      }
+    } catch (err) { toast('Full screen is not available here'); }
+  }
+  $('fsBtn').addEventListener('click', toggleFullscreen);
+
+  // ---------- share ----------
+  $('shareBtn').addEventListener('click', async () => {
+    const url = new URL(location.href.split('?')[0].split('#')[0]);
+    url.searchParams.set('theme', themeId);
+    url.searchParams.set('speed', String(Math.round(target * 100)));
+    const text = `Flying through space at ${fmtC(speedC(target))}c in Deep Field Cruiser`;
+    try {
+      if (navigator.share) { await navigator.share({ title: 'Deep Field Cruiser', text, url: url.href }); return; }
+    } catch (err) { if (err && err.name === 'AbortError') return; }
+    try { await navigator.clipboard.writeText(url.href); toast('Link copied · it opens this theme at this speed'); }
+    catch (err) { toast(url.href); }
+  });
+
+  // ---------- tilt steering (phones) ----------
+  let tiltOn = false, tilt0 = null;
+  const coarse = matchMedia('(pointer: coarse)').matches;
+  if (coarse && 'DeviceOrientationEvent' in window) $('tiltBtn').hidden = false;
+  function onTilt(e) {
+    if (e.beta == null || e.gamma == null) return;
+    const ang = (screen.orientation && screen.orientation.angle) || window.orientation || 0;
+    if (!tilt0) tilt0 = { b: e.beta, g: e.gamma };
+    const db = e.beta - tilt0.b, dg = e.gamma - tilt0.g;
+    let x, y;
+    if (ang === 90) { x = db; y = -dg; }
+    else if (ang === -90 || ang === 270) { x = -db; y = dg; }
+    else if (ang === 180) { x = -dg; y = -db; }
+    else { x = dg; y = db; }
+    aimX = Math.max(-1, Math.min(1, x / 25));
+    aimY = Math.max(-1, Math.min(1, y / 25));
+  }
+  $('tiltBtn').addEventListener('click', async () => {
+    if (tiltOn) {
+      tiltOn = false; removeEventListener('deviceorientation', onTilt); aimX = aimY = 0;
+      $('tiltBtn').setAttribute('aria-pressed', 'false'); toast('Tilt steering off'); return;
+    }
+    try {
+      const DOE = window.DeviceOrientationEvent;
+      if (DOE && typeof DOE.requestPermission === 'function') {
+        const res = await DOE.requestPermission();
+        if (res !== 'granted') { toast('Motion access was declined, so tilt steering is off'); return; }
+      }
+      tilt0 = null; tiltOn = true;
+      addEventListener('deviceorientation', onTilt);
+      $('tiltBtn').setAttribute('aria-pressed', 'true');
+      toast('Tilt steering on · hold the phone the way you like, it re-centres there');
+    } catch (err) { toast('This browser does not share motion data'); }
+  });
+
+  // ---------- sound ----------
+  let audio = null;
+  $('sound').addEventListener('click', async () => {
+    const btn = $('sound');
+    if (!audio) {
+      try {
+        const ac = new (window.AudioContext || window.webkitAudioContext)();
+        const gain = ac.createGain(); gain.gain.value = 0;
+        const lp = ac.createBiquadFilter(); lp.type = 'lowpass'; lp.frequency.value = 300; lp.Q.value = 4;
+        const o1 = ac.createOscillator(); o1.type = 'sawtooth'; o1.frequency.value = 42;
+        const o2 = ac.createOscillator(); o2.type = 'sine'; o2.frequency.value = 84;
+        o1.connect(lp); o2.connect(lp); lp.connect(gain); gain.connect(ac.destination);
+        o1.start(); o2.start();
+        audio = { ac, gain, lp, o1, o2, on: false };
+      } catch (err) { btn.textContent = 'Sound unavailable'; return; }
+    }
+    audio.on = !audio.on;
+    if (audio.ac.state === 'suspended') await audio.ac.resume();
+    audio.gain.gain.setTargetAtTime(audio.on ? 0.06 : 0, audio.ac.currentTime, 0.2);
+    btn.setAttribute('aria-pressed', String(audio.on));
+    btn.textContent = 'Engine sound: ' + (audio.on ? 'on' : 'off');
+  });
+
+  // ---------- readouts ----------
+  const speedC = t => t < 0.002 ? 0 : 0.01 * Math.pow(10, 5 * t);
+  const visVel = t => 0.012 + 4 * Math.pow(t, 2.2);
+  function fmtC(c) { return c === 0 ? '0.000' : c < 10 ? c.toFixed(3) : c < 100 ? c.toFixed(1) : Math.round(c).toLocaleString('en-US'); }
+  function fmtDur(s) {
+    if (!isFinite(s)) return '—';
+    const y = s / 31557600;
+    if (y >= 1) return (y >= 100 ? Math.round(y).toLocaleString('en-US') : y.toFixed(1)) + ' years';
+    const d = Math.floor(s / 86400), h = Math.floor((s % 86400) / 3600), m = Math.floor((s % 3600) / 60);
+    if (d > 0) return `${d} d ${h} h`;
+    if (h > 0) return `${h} h ${m} m`;
+    return `${m} m ${Math.floor(s % 60)} s`;
+  }
+  let lastHud = 0;
+  function hud(now, c) {
+    if (now - lastHud < 90) return; lastHud = now;
+    $('vC').textContent = fmtC(c);
+    $('vKm').textContent = Math.round(c * 299792.458).toLocaleString('en-US');
+    const m = $('mode');
+    const mode = c < 0.05 ? 'Drift' : c < 0.5 ? 'Cruise' : c < 1 ? 'Relativistic' : 'Warp drive';
+    m.textContent = mode; m.classList.toggle('warp', c >= 1);
+    $('dist').textContent = travelledAU < LY_AU * 0.05
+      ? travelledAU.toLocaleString('en-US', { maximumFractionDigits: travelledAU < 100 ? 2 : 0 }) + ' AU'
+      : (travelledAU / LY_AU).toFixed(3) + ' ly';
+    const rem = PROXIMA_AU - travelledAU;
+    $('eta').textContent = rem <= 0 ? 'Arrived' : c === 0 ? 'Holding' : fmtDur(rem / (c * AU_PER_LS));
+    if (c < 1) { $('gLabel').textContent = 'Time dilation'; $('gamma').textContent = 'γ ' + (1 / Math.sqrt(1 - Math.min(c, 0.9999) ** 2)).toFixed(3); }
+    else { $('gLabel').textContent = 'Drive'; $('gamma').textContent = 'Alcubierre bubble'; }
+  }
+
+  // ---------- render ----------
+  let last = performance.now();
+  function frame(now) {
+    const dt = Math.min(0.05, (now - last) / 1000); last = now;
+    cur += (target - cur) * Math.min(1, dt * 1.4);
+    const dashGoal = zen ? 0 : dashH;
+    if (Math.abs(dashGoal - dashCur) > 0.5) {
+      dashCur += (dashGoal - dashCur) * Math.min(1, dt * 6);
+      if (Math.abs(dashGoal - dashCur) <= 0.5) dashCur = dashGoal;
+      buildFrame();
+    }
+    adapt(dt);
+    const vel = visVel(cur), c = speedC(cur);
+    travelledAU += c * AU_PER_LS * dt;
+    travel += vel * dt;
+    const warp = Math.max(0, Math.min(1, (cur - 0.5) / 0.5));
+
+    steerX += (aimX - steerX) * Math.min(1, dt * 2);
+    steerY += (aimY - steerY) * Math.min(1, dt * 2);
+    const { T, B, mid } = windowBox();
+    vpx = W / 2 + steerX * W * 0.12;
+    vpy = mid + steerY * (B - T) * 0.14;
+
+    ctx.setTransform(1, 0, 0, 1, 0, 0);
+    ctx.globalCompositeOperation = 'source-over';
+    ctx.globalAlpha = 1;
+    ctx.drawImage(bandCanvas, -steerX * 14 * DPR, -steerY * 10 * DPR);
+
+    const shake = reduce ? 0 : warp * warp * 2.2 * DPR;
+    ctx.save();
+    if (shake) ctx.translate((Math.random() - 0.5) * shake, (Math.random() - 0.5) * shake);
+
+    drawNebulae(vel, dt);
+    if (TH.style === 'neon') drawSun();
+
+    // planet
+    if (!planet && travel > nextPlanetAt) spawnPlanet();
+    if (planet) {
+      const p = planet;
+      p.z -= vel * dt * 0.32;
+      const px = vpx + (p.x / p.z) * F, py = vpy + (p.y / p.z) * F, R = (p.r / p.z) * F;
+      if (p.z < 0.15 || px + R * 2 < 0 || px - R * 2 > W || py - R * 2 > H || py + R * 2 < 0) {
+        if (p.z < 3) { planet = null; nextPlanetAt = travel + 7 + Math.random() * 9; }
+      } else {
+        const k = TH.planets[p.ki % TH.planets.length], a = Math.min(1, (10.5 - p.z) / 3);
+        if (TH.style === 'toon') drawToonPlanet(p, k, px, py, R, a);
+        else if (TH.style === 'neon') drawNeonPlanet(p, k, px, py, R, a);
+        else drawPlanet(p, k, px, py, R, a);
+      }
+    }
+
+    drawStars(vel, dt, warp);
+    if (TH.style === 'neon') drawGrid(warp);
+
+    // warp glow
+    if (warp > 0) {
+      ctx.globalCompositeOperation = 'lighter';
+      const R = Math.min(W, H) * (0.35 + warp * 0.25), w = TH.warp;
+      const g = ctx.createRadialGradient(vpx, vpy, 0, vpx, vpy, R);
+      g.addColorStop(0, `rgba(${w[0]},${0.32 * warp})`);
+      g.addColorStop(0.25, `rgba(${w[1]},${0.12 * warp})`);
+      g.addColorStop(1, `rgba(${w[2]},0)`);
+      ctx.fillStyle = g; ctx.fillRect(vpx - R, vpy - R, R * 2, R * 2);
+      ctx.globalCompositeOperation = 'source-over';
+    }
+    ctx.restore();
+
+    // vignette
+    const vg = ctx.createRadialGradient(W / 2, mid, Math.min(W, H) * 0.3, W / 2, mid, Math.max(W, H) * 0.75);
+    vg.addColorStop(0, 'rgba(0,0,0,0)'); vg.addColorStop(1, `rgba(0,0,0,${(TH.style === 'toon' ? 0.3 : 0.55) + warp * 0.2})`);
+    ctx.fillStyle = vg; ctx.fillRect(0, 0, W, H);
+
+    drawReticle(warp);
+    drawCockpit(now, warp);
+
+    // theme-change flash
+    if (flash > 0) {
+      ctx.globalAlpha = flash * 0.8; ctx.fillStyle = TH.bg; ctx.fillRect(0, 0, W, H); ctx.globalAlpha = 1;
+      flash = Math.max(0, flash - dt * 2.2);
+    }
+
+    if (audio && audio.on) {
+      const t = audio.ac.currentTime;
+      audio.o1.frequency.setTargetAtTime(38 + cur * 70, t, 0.15);
+      audio.o2.frequency.setTargetAtTime(76 + cur * 160, t, 0.15);
+      audio.lp.frequency.setTargetAtTime(220 + cur * 1600, t, 0.15);
+    }
+    hud(now, c);
+    requestAnimationFrame(frame);
+  }
+
+  function drawNebulae(vel, dt) {
+    ctx.globalCompositeOperation = 'lighter';
+    const toon = TH.style === 'toon';
+    for (let i = 0; i < nebs.length; i++) {
+      const n = nebs[i];
+      n.z -= vel * dt * 0.12;
+      if (n.z < 0.6) { nebs[i] = newNeb(true); continue; }
+      const px = vpx + (n.x / n.z) * F, py = vpy + (n.y / n.z) * F, R = (n.r / n.z) * F;
+      const fade = Math.min(1, (10 - n.z) / 3) * Math.min(1, (n.z - 0.6) / 1.2);
+      if (fade <= 0 || px + R < 0 || px - R > W || py + R < 0 || py - R > H) continue;
+      const col = TH.nebs[n.ci % TH.nebs.length], a = n.a * fade * TH.nebAlpha;
+      const g = ctx.createRadialGradient(px, py, 0, px, py, R);
+      if (toon) {
+        // hard-edged, cel-shaded cloud rings
+        g.addColorStop(0, `rgba(${col},${a * 0.9})`); g.addColorStop(0.38, `rgba(${col},${a * 0.9})`);
+        g.addColorStop(0.39, `rgba(${col},${a * 0.5})`); g.addColorStop(0.68, `rgba(${col},${a * 0.5})`);
+        g.addColorStop(0.69, `rgba(${col},${a * 0.2})`); g.addColorStop(0.92, `rgba(${col},${a * 0.2})`);
+        g.addColorStop(0.93, `rgba(${col},0)`);
+      } else {
+        g.addColorStop(0, `rgba(${col},${a})`);
+        g.addColorStop(0.45, `rgba(${col},${a * 0.45})`);
+        g.addColorStop(1, `rgba(${col},0)`);
+      }
+      ctx.fillStyle = g; ctx.fillRect(px - R, py - R, R * 2, R * 2);
+    }
+    ctx.globalCompositeOperation = 'source-over';
+  }
+
+  function drawStars(vel, dt, warp) {
+    const trail = vel * 0.045 + 0.0015;
+    const xmin = -W * 0.2, xmax = W * 1.2, ymin = -H * 0.2, ymax = H * 1.2;
+    for (let i = 0; i < N; i++) {
+      let z = sz[i] - vel * dt;
+      if (z <= 0.012) { resetStar(i, 1); z = 1; }
+      sz[i] = z;
+      const x1 = vpx + (sx[i] / z) * F, y1 = vpy + (sy[i] / z) * F;
+      if (x1 < xmin || x1 > xmax || y1 < ymin || y1 > ymax) { resetStar(i, 0.85 + Math.random() * 0.15); sB[i] = -1; continue; }
+      const z2 = z + trail;
+      sX1[i] = x1; sY1[i] = y1;
+      sX2[i] = vpx + (sx[i] / z2) * F; sY2[i] = vpy + (sy[i] / z2) * F;
+      const band = z < 0.22 ? 3 : z < 0.45 ? 2 : z < 0.72 ? 1 : 0;
+      sB[i] = band * 3 + sc[i];
+    }
+    ctx.lineCap = 'round';
+    ctx.globalCompositeOperation = TH.starBlend;
+    for (let b = 0; b < 12; b++) {
+      const band = (b / 3) | 0, col = b % 3;
+      ctx.beginPath();
+      let any = false;
+      for (let i = 0; i < N; i++) {
+        if (sB[i] !== b) continue;
+        ctx.moveTo(sX2[i], sY2[i]); ctx.lineTo(sX1[i], sY1[i]); any = true;
+      }
+      if (!any) continue;
+      ctx.globalAlpha = TH.style === 'toon' ? Math.min(1, BAND_A[band] + 0.2) : BAND_A[band];
+      ctx.strokeStyle = warp > 0.3 && col === 0 ? TH.warpStar : TH.stars[col];
+      ctx.lineWidth = BAND_W[band] * DPR * TH.starW * (1 + warp * 0.4);
+      ctx.stroke();
+    }
+    ctx.globalAlpha = 1;
+    ctx.globalCompositeOperation = 'source-over';
+  }
+
+  // Neon: retro sun and a perspective grid floor
+  function horizonY() { return vpy + (0.32 / 30) * F; }
+  function drawSun() {
+    const R = Math.min(W, H) * 0.17, cx = vpx, cy = horizonY() - R * 0.45;
+    ctx.save();
+    const glow = ctx.createRadialGradient(cx, cy, R * 0.8, cx, cy, R * 2.2);
+    glow.addColorStop(0, 'rgba(255,60,200,.35)'); glow.addColorStop(1, 'rgba(255,60,200,0)');
+    ctx.fillStyle = glow; ctx.fillRect(cx - R * 2.2, cy - R * 2.2, R * 4.4, R * 4.4);
+    ctx.beginPath(); ctx.arc(cx, cy, R, 0, Math.PI * 2); ctx.clip();
+    const g = ctx.createLinearGradient(0, cy - R, 0, cy + R);
+    g.addColorStop(0, '#ffe45c'); g.addColorStop(0.5, '#ff7a6b'); g.addColorStop(1, '#ff2bd6');
+    ctx.fillStyle = g; ctx.fillRect(cx - R, cy - R, R * 2, R * 2);
+    ctx.fillStyle = TH.bg;
+    const shift = (travel * 0.6) % 1;
+    for (let i = 0; i < 7; i++) {
+      const t = (i + shift) / 7, y = cy + R * (0.05 + t * 0.95), h = R * (0.015 + t * 0.07);
+      ctx.fillRect(cx - R, y, R * 2, h);
+    }
+    ctx.restore();
+  }
+  function drawGrid(warp) {
+    const hy = horizonY(), FLOOR = 0.32, FAR = 30, col = TH.grid;
+    ctx.save();
+    const fg = ctx.createLinearGradient(0, hy, 0, H);
+    fg.addColorStop(0, '#0b0118'); fg.addColorStop(1, '#22053d');
+    ctx.fillStyle = fg; ctx.fillRect(0, hy, W, H - hy);
+    ctx.globalCompositeOperation = 'lighter';
+    ctx.lineWidth = 1.2 * DPR;
+    // horizontal lines rushing toward the viewer
+    const spacing = 1.2, phase = (travel * 3) % spacing;
+    for (let z = spacing - phase; z < FAR; z += spacing) {
+      if (z < 0.05) continue;
+      const y = vpy + (FLOOR / z) * F;
+      if (y > H) continue;
+      ctx.strokeStyle = `rgba(${col},${Math.pow(1 - z / FAR, 2) * (0.9 + warp * 0.1)})`;
+      ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(W, y); ctx.stroke();
+    }
+    // lines converging on the vanishing point
+    const vg = ctx.createLinearGradient(0, hy, 0, H);
+    vg.addColorStop(0, `rgba(${col},0)`); vg.addColorStop(0.25, `rgba(${col},.55)`); vg.addColorStop(1, `rgba(${col},.95)`);
+    ctx.strokeStyle = vg;
+    ctx.beginPath();
+    for (let x = -12; x <= 12; x += 0.6) {
+      const zn = 0.06;
+      ctx.moveTo(vpx + (x / FAR) * F, hy);
+      ctx.lineTo(vpx + (x / zn) * F, vpy + (FLOOR / zn) * F);
+    }
+    ctx.stroke();
+    // horizon glow line
+    ctx.strokeStyle = `rgba(${col},.9)`; ctx.lineWidth = 2 * DPR;
+    ctx.beginPath(); ctx.moveTo(0, hy); ctx.lineTo(W, hy); ctx.stroke();
+    ctx.restore();
+  }
+
+  function drawPlanet(p, k, px, py, R, alpha) {
+    if (R < 0.6 || alpha <= 0) return;
+    ctx.save();
+    ctx.globalAlpha = alpha;
+    const ag = ctx.createRadialGradient(px, py, R * 0.92, px, py, R * 1.35);
+    ag.addColorStop(0, `rgba(${k.atmo},.45)`); ag.addColorStop(1, `rgba(${k.atmo},0)`);
+    ctx.fillStyle = ag; ctx.beginPath(); ctx.arc(px, py, R * 1.35, 0, Math.PI * 2); ctx.fill();
+    if (k.ring) ring(px, py, R, p.tilt, Math.PI, Math.PI * 2, k);
+    ctx.save();
+    ctx.beginPath(); ctx.arc(px, py, R, 0, Math.PI * 2); ctx.clip();
+    const bg = ctx.createRadialGradient(px - R * 0.4, py - R * 0.45, R * 0.05, px, py, R * 1.05);
+    bg.addColorStop(0, k.lite); bg.addColorStop(0.45, k.base); bg.addColorStop(1, k.dark);
+    ctx.fillStyle = bg; ctx.fillRect(px - R, py - R, R * 2, R * 2);
+    if (k.bands) bands(p, px, py, R, 'rgba(255,240,220,.10)', 'rgba(30,10,0,.14)');
+    const sh = ctx.createRadialGradient(px + R * 0.55, py + R * 0.5, R * 0.2, px + R * 0.3, py + R * 0.3, R * 1.4);
+    sh.addColorStop(0, 'rgba(0,0,0,0)'); sh.addColorStop(0.55, 'rgba(0,0,0,.15)'); sh.addColorStop(1, 'rgba(0,0,0,.85)');
+    ctx.fillStyle = sh; ctx.fillRect(px - R, py - R, R * 2, R * 2);
+    ctx.restore();
+    if (k.ring) ring(px, py, R, p.tilt, 0, Math.PI, k);
+    ctx.restore();
+  }
+  function bands(p, px, py, R, light, dark) {
+    ctx.save();
+    ctx.translate(px, py); ctx.rotate(p.tilt);
+    for (let i = -6; i <= 6; i++) {
+      const h = R * (0.05 + 0.06 * Math.abs(Math.sin(p.seed + i * 1.7)));
+      ctx.fillStyle = i % 2 ? light : dark;
+      ctx.fillRect(-R, i * R * 0.15, R * 2, h);
+    }
+    ctx.restore();
+  }
+  function ring(px, py, R, tilt, a0, a1, k) {
+    ctx.save();
+    ctx.translate(px, py); ctx.rotate(tilt); ctx.scale(1, 0.26);
+    ctx.lineWidth = R * 0.22;
+    ctx.strokeStyle = `rgba(${k.atmo},.35)`;
+    ctx.beginPath(); ctx.arc(0, 0, R * 1.6, a0, a1); ctx.stroke();
+    ctx.lineWidth = R * 0.08;
+    ctx.strokeStyle = 'rgba(255,245,230,.30)';
+    ctx.beginPath(); ctx.arc(0, 0, R * 1.85, a0, a1); ctx.stroke();
+    ctx.restore();
+  }
+
+  function drawToonPlanet(p, k, px, py, R, alpha) {
+    if (R < 0.6 || alpha <= 0) return;
+    const ink = '#0b0820', ow = Math.max(2 * DPR, R * 0.045);
+    ctx.save();
+    ctx.globalAlpha = alpha;
+    const toonRing = (a0, a1) => {
+      ctx.save(); ctx.translate(px, py); ctx.rotate(p.tilt); ctx.scale(1, 0.26);
+      ctx.lineWidth = R * 0.26 + ow * 4; ctx.strokeStyle = ink;
+      ctx.beginPath(); ctx.arc(0, 0, R * 1.7, a0, a1); ctx.stroke();
+      ctx.lineWidth = R * 0.26; ctx.strokeStyle = `rgb(${k.atmo})`;
+      ctx.beginPath(); ctx.arc(0, 0, R * 1.7, a0, a1); ctx.stroke();
+      ctx.restore();
+    };
+    if (k.ring) toonRing(Math.PI, Math.PI * 2);
+    ctx.save();
+    ctx.beginPath(); ctx.arc(px, py, R, 0, Math.PI * 2); ctx.clip();
+    ctx.fillStyle = k.dark; ctx.fillRect(px - R, py - R, R * 2, R * 2);
+    ctx.fillStyle = k.base; ctx.beginPath(); ctx.arc(px - R * 0.2, py - R * 0.2, R * 0.95, 0, Math.PI * 2); ctx.fill();
+    if (k.bands) bands(p, px, py, R, 'rgba(255,255,255,.18)', 'rgba(11,8,32,.12)');
+    ctx.fillStyle = 'rgba(255,255,255,.85)';
+    ctx.beginPath(); ctx.ellipse(px - R * 0.45, py - R * 0.5, R * 0.16, R * 0.09, -0.6, 0, Math.PI * 2); ctx.fill();
+    ctx.beginPath(); ctx.arc(px - R * 0.22, py - R * 0.62, R * 0.05, 0, Math.PI * 2); ctx.fill();
+    ctx.restore();
+    ctx.lineWidth = ow; ctx.strokeStyle = ink;
+    ctx.beginPath(); ctx.arc(px, py, R, 0, Math.PI * 2); ctx.stroke();
+    if (k.ring) toonRing(0, Math.PI);
+    ctx.restore();
+  }
+
+  function drawNeonPlanet(p, k, px, py, R, alpha) {
+    if (R < 0.6 || alpha <= 0) return;
+    const c = k.atmo;
+    ctx.save();
+    ctx.globalAlpha = alpha;
+    const glow = ctx.createRadialGradient(px, py, R * 0.9, px, py, R * 1.6);
+    glow.addColorStop(0, `rgba(${c},.35)`); glow.addColorStop(1, `rgba(${c},0)`);
+    ctx.fillStyle = glow; ctx.beginPath(); ctx.arc(px, py, R * 1.6, 0, Math.PI * 2); ctx.fill();
+    const neonRing = (a0, a1) => {
+      ctx.save(); ctx.translate(px, py); ctx.rotate(p.tilt); ctx.scale(1, 0.26);
+      ctx.lineWidth = Math.max(1.5 * DPR, R * 0.03) / 0.26 * 0.35; ctx.strokeStyle = `rgba(${c},.95)`;
+      ctx.beginPath(); ctx.arc(0, 0, R * 1.6, a0, a1); ctx.stroke();
+      ctx.beginPath(); ctx.arc(0, 0, R * 1.85, a0, a1); ctx.stroke();
+      ctx.restore();
+    };
+    if (k.ring) neonRing(Math.PI, Math.PI * 2);
+    ctx.save();
+    ctx.beginPath(); ctx.arc(px, py, R, 0, Math.PI * 2); ctx.clip();
+    ctx.fillStyle = '#0a0216'; ctx.fillRect(px - R, py - R, R * 2, R * 2);
+    ctx.translate(px, py); ctx.rotate(p.tilt);
+    ctx.strokeStyle = `rgba(${c},.55)`; ctx.lineWidth = Math.max(1 * DPR, R * 0.012);
+    const spin = (travel * 0.15 + p.seed) % 1;
+    ctx.beginPath();
+    for (let i = -4; i <= 4; i++) { const y = (i / 5) * R; const hw = Math.sqrt(Math.max(0, R * R - y * y)); ctx.moveTo(-hw, y); ctx.lineTo(hw, y); }
+    for (let i = 0; i < 6; i++) { const rx = Math.abs(Math.cos(((i / 6) + spin) * Math.PI)) * R; ctx.moveTo(rx, 0); ctx.ellipse(0, 0, rx, R, 0, 0, Math.PI * 2); }
+    ctx.stroke();
+    ctx.restore();
+    ctx.lineWidth = Math.max(2 * DPR, R * 0.03); ctx.strokeStyle = `rgb(${c})`;
+    ctx.beginPath(); ctx.arc(px, py, R, 0, Math.PI * 2); ctx.stroke();
+    if (k.ring) neonRing(0, Math.PI);
+    ctx.restore();
+  }
+
+  function drawReticle(warp) {
+    const s = 14 * DPR;
+    ctx.strokeStyle = `rgba(${TH.edge},${0.35 + warp * 0.2})`;
+    ctx.lineWidth = (TH.style === 'toon' ? 2 : 1) * DPR;
+    ctx.beginPath(); ctx.arc(vpx, vpy, s, 0, Math.PI * 2);
+    ctx.moveTo(vpx - s * 2.2, vpy); ctx.lineTo(vpx - s * 1.3, vpy);
+    ctx.moveTo(vpx + s * 1.3, vpy); ctx.lineTo(vpx + s * 2.2, vpy);
+    ctx.moveTo(vpx, vpy - s * 2.2); ctx.lineTo(vpx, vpy - s * 1.3);
+    ctx.stroke();
+  }
+
+  function drawCockpit(now, warp) {
+    const { T, B } = windowBox();
+    const toon = TH.style === 'toon';
+    ctx.save(); ctx.clip(windowPath);
+    const gl = ctx.createLinearGradient(0, T, W * 0.6, B);
+    const gc = toon ? '255,255,255' : '160,210,255';
+    gl.addColorStop(0, `rgba(${gc},${toon ? 0.08 : 0.05})`); gl.addColorStop(0.35, `rgba(${gc},0)`);
+    gl.addColorStop(0.62, `rgba(${gc},${toon ? 0.06 : 0.025})`); gl.addColorStop(0.7, `rgba(${gc},0)`);
+    ctx.fillStyle = gl; ctx.fillRect(0, 0, W, H);
+    ctx.restore();
+    const hull = new Path2D(); hull.rect(0, 0, W, H); hull.addPath(windowPath);
+    ctx.fillStyle = frameGrad; ctx.fill(hull, 'evenodd');
+    ctx.lineJoin = 'round';
+    ctx.lineWidth = (toon ? 10 : 6) * DPR; ctx.strokeStyle = TH.frameEdge; ctx.stroke(windowPath);
+    ctx.lineWidth = (toon ? 3 : 1.2) * DPR;
+    ctx.strokeStyle = `rgba(${TH.edge},${(toon ? 0.9 : 0.22) + warp * 0.25})`;
+    ctx.stroke(windowPath);
+    ctx.fillStyle = TH.bolt;
+    for (let i = 1; i < 12; i++) { ctx.beginPath(); ctx.arc(W * (0.15 + i * 0.7 / 12), T - 7 * DPR, (toon ? 2.6 : 1.6) * DPR, 0, Math.PI * 2); ctx.fill(); }
+    const blink = (Math.sin(now / 420) + 1) / 2;
+    const mono = themeId === 'mono';
+    lamp(W * 0.06, T + (B - T) * 0.2, mono ? `rgba(255,255,255,${0.25 + blink * 0.75})` : `rgba(255,80,80,${0.35 + blink * 0.65})`);
+    lamp(W * 0.94, T + (B - T) * 0.2, mono ? `rgba(255,255,255,${0.25 + (1 - blink) * 0.75})` : `rgba(90,255,150,${0.35 + (1 - blink) * 0.65})`);
+  }
+  function lamp(x, y, col) {
+    ctx.fillStyle = col; ctx.shadowColor = col; ctx.shadowBlur = 10 * DPR;
+    ctx.beginPath(); ctx.arc(x, y, 3 * DPR, 0, Math.PI * 2); ctx.fill();
+    ctx.shadowBlur = 0;
+  }
+
+  // ---------- adaptive quality: drop detail on slow devices ----------
+  let fpsT = 0, fpsN = 0, slowStreak = 0, warmup = 3;
+  function adapt(dt) {
+    fpsT += dt; fpsN++;
+    if (fpsT < 2) return;
+    const fps = fpsN / fpsT; fpsT = 0; fpsN = 0;
+    if (warmup > 0) { warmup--; return; }
+    slowStreak = fps < 42 ? slowStreak + 1 : 0;
+    if (slowStreak < 2) return;
+    slowStreak = 0;
+    if (N > 500) N = Math.floor(N * 0.7);
+    else if (dprCap > 1) { dprCap = 1; resize(); }
+    else if (nebs.length > 3) nebs.length = 3;
+  }
+
+  // ---------- lifecycle ----------
+  setInterval(() => { try { localStorage.setItem('dfc-au', String(travelledAU)); } catch (e) {} }, 5000);
+  document.addEventListener('visibilitychange', () => {
+    if (document.hidden) {
+      try { localStorage.setItem('dfc-au', String(travelledAU)); } catch (e) {}
+      if (audio && audio.on) audio.ac.suspend();
+    } else {
+      last = performance.now();
+      if (audio && audio.on) audio.ac.resume();
+    }
+  });
+  if ('serviceWorker' in navigator && (location.protocol === 'https:' || location.hostname === 'localhost')) {
+    addEventListener('load', () => navigator.serviceWorker.register('sw.js').catch(() => {}));
+  }
+
+  applyTheme(themeId, false);
+  new ResizeObserver(resize).observe(dash);
+  addEventListener('resize', resize);
+  resize();
+  setTarget(target);
+  wake();
+  requestAnimationFrame(t => { last = t; frame(t); });
+})();
+</script>
+</body>
+</html>

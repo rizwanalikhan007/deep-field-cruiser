@@ -1,0 +1,17 @@
+{
+  "name": "Deep Field Cruiser",
+  "short_name": "Cruiser",
+  "description": "Fly through space from a spaceship cockpit. Slow drift to full warp.",
+  "start_url": "./",
+  "scope": "./",
+  "display": "fullscreen",
+  "orientation": "any",
+  "background_color": "#020308",
+  "theme_color": "#020308",
+  "categories": ["games", "entertainment"],
+  "icons": [
+    { "src": "icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "icon-maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ]
+}
